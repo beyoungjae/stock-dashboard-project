@@ -1,17 +1,15 @@
-import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { useSelector, useDispatch } from 'react-redux'
+import React, { useState, useCallback } from 'react'
+import { Link } from 'react-router-dom'
+import { useDispatch } from 'react-redux'
 import styled from 'styled-components'
 import { motion, AnimatePresence } from 'framer-motion'
 import MenuIcon from '@mui/icons-material/Menu'
 import CloseIcon from '@mui/icons-material/Close'
 import { logoutUserThunk } from '../store/slices/authSlice'
 
-const Navbar = () => {
+const Navbar = ({ user }) => {
    const [isMenuOpen, setIsMenuOpen] = useState(false)
-   const navigate = useNavigate()
    const dispatch = useDispatch()
-   const { user, isAuthenticated } = useSelector((state) => state.auth)
 
    // 메뉴 열기/닫기
    const toggleMenu = () => {
@@ -19,11 +17,16 @@ const Navbar = () => {
    }
 
    // 로그아웃
-   const handleLogout = () => {
+   const handleLogout = useCallback(() => {
       dispatch(logoutUserThunk())
-      navigate('/login')
-      setIsMenuOpen(false)
-   }
+         .unwrap()
+         .then(() => {
+            window.location.href = '/'
+         })
+         .catch((error) => {
+            alert(error)
+         })
+   }, [dispatch])
 
    return (
       <>
@@ -37,9 +40,9 @@ const Navbar = () => {
             </Logo>
             <Nav>
                <AnimatePresence mode="wait">
-                  {isAuthenticated && user ? (
+                  {user ? (
                      <AuthenticatedNav key="auth" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                        <UserInfo>{user.username}님 환영합니다</UserInfo>
+                        <UserInfo>{user?.username}님 환영합니다</UserInfo>
                         <LogoutButton onClick={handleLogout} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                            로그아웃
                         </LogoutButton>
@@ -74,6 +77,9 @@ const Navbar = () => {
                      </MenuItem>
                      <MenuItem to="/popular" onClick={toggleMenu} whileHover={{ x: 10 }} whileTap={{ scale: 0.95 }}>
                         인기 게시글
+                     </MenuItem>
+                     <MenuItem to="/posts" onClick={toggleMenu} whileHover={{ x: 10 }} whileTap={{ scale: 0.95 }}>
+                        게시판
                      </MenuItem>
                      <MenuItem to="/market-overview" onClick={toggleMenu} whileHover={{ x: 10 }} whileTap={{ scale: 0.95 }}>
                         시장 개요

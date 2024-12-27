@@ -85,6 +85,9 @@ const StockDetail = () => {
    const isKoreanStock = symbol?.endsWith('.KS') ?? false // 주식 종류 확인 KS = 한국 주식
    const formattedPrice = formatPrice(Number(currentStock.price), isKoreanStock) // 가격 포맷팅 한국 주식일 경우 천 단위 절사
    const formattedChange = formatPrice(Math.abs(Number(currentStock.change)), isKoreanStock) // 변동 포맷팅 한국 주식일 경우 천 단위 절사
+   const formatNumber = (number) => {
+      return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+   } // 숫자 천 단위 콤마 추가
 
    // 시가총액 포맷팅 함수
    const formatMarketCap = (marketCap, isKorean) => {
@@ -147,14 +150,28 @@ const StockDetail = () => {
             <PriceInfo>
                <Price>
                   {!isKoreanStock && <span className="currency">$</span>}
-                  <FlipNumbers height={48} width={32} color="white" background="transparent" play perspective={1000} duration={0.5} numbers={formattedPrice} />
+                  <NumberGroup>
+                     {formatNumber(formattedPrice)
+                        .split('')
+                        .map((char, index) => (
+                           <React.Fragment key={index}>{char === ',' ? <NumberSeparator>,</NumberSeparator> : <FlipNumbers height={48} width={32} color="white" background="transparent" play perspective={1000} duration={0.5} numbers={char} />}</React.Fragment>
+                        ))}
+                  </NumberGroup>
                   {isKoreanStock && <span className="unit">원</span>}
                </Price>
                <Change $isPositive={isPositive}>
                   <span>
                      {currentStock.change >= 0 ? '+' : '-'}
                      {!isKoreanStock && '$'}
-                     <FlipNumbers height={24} width={20} color={isPositive ? '#4eaf0a' : '#e01e1e'} background="transparent" play perspective={1000} duration={0.5} numbers={formattedChange} />
+                     <NumberGroup>
+                        {formatNumber(formattedChange)
+                           .split('')
+                           .map((char, index) => (
+                              <React.Fragment key={index}>
+                                 {char === ',' ? <NumberSeparator2 $isPositive={isPositive}>,</NumberSeparator2> : <FlipNumbers height={24} width={20} color={isPositive ? '#4eaf0a' : '#e01e1e'} background="transparent" play perspective={1000} duration={0.5} numbers={char} />}
+                              </React.Fragment>
+                           ))}
+                     </NumberGroup>
                      {isKoreanStock && <span className="unit">원</span>}
                   </span>
                   <span className="percent">
@@ -292,6 +309,20 @@ const PriceInfo = styled.div`
    font-feature-settings: 'tnum' on, 'lnum' on;
 `
 
+const NumberGroup = styled.div`
+   display: inline-flex;
+   align-items: center;
+`
+
+const NumberSeparator = styled.span`
+   gap: 8px;
+   height: 56px;
+   font-size: 48px;
+   font-weight: 600;
+   color: ${({ theme }) => theme.colors.text};
+   letter-spacing: -0.02em;
+`
+
 const Price = styled.div`
    display: flex;
    align-items: center;
@@ -315,6 +346,15 @@ const Price = styled.div`
       font-weight: 500;
       opacity: 0.9;
    }
+`
+
+const NumberSeparator2 = styled.span`
+   gap: 4px;
+   height: 28px;
+   font-size: 20px;
+   font-weight: 500;
+   color: ${({ $isPositive }) => ($isPositive ? '#4eaf0a' : '#e01e1e')};
+   letter-spacing: 0;
 `
 
 const Change = styled(motion.div)`

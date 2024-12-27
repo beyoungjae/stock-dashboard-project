@@ -16,6 +16,7 @@ const postRouter = require('./routes/post')
 const authRouter = require('./routes/auth')
 const pageRouter = require('./routes/page')
 const stockRouter = require('./routes/stock')
+const commentRouter = require('./routes/comment')
 
 const app = express()
 passportConfig()
@@ -74,10 +75,11 @@ app.use(passport.session())
 
 // 라우터 등록
 app.use('/user', userRouter)
-app.use('/post', postRouter)
+app.use('/posts', postRouter)
 app.use('/auth', authRouter)
 app.use('/page', pageRouter)
 app.use('/stock', stockRouter)
+app.use('/comment', commentRouter)
 
 // 잘못된 라우터 경로 처리
 app.use((req, res, next) => {

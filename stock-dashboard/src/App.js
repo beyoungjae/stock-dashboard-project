@@ -1,38 +1,44 @@
 import React, { useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { checkAuthStatusThunk } from './store/slices/authSlice'
+import Navbar from './components/Navbar'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import PostDetail from './pages/PostDetail'
+import Posts from './pages/Posts'
+import WritePost from './pages/WritePost'
+import PopularPosts from './pages/PopularPosts'
+import EditPost from './pages/EditPost'
 import MyDashboard from './pages/MyDashboard'
 import ChartPage from './pages/ChartPage'
 import NotFound from './pages/NotFound'
 import StockDetail from './pages/StockDetail'
 import GlobalStyles from './styles/GlobalStyles'
-import Navbar from './components/Navbar'
 
 function App() {
    const dispatch = useDispatch()
+   const { isAuthenticated, user } = useSelector((state) => state.auth)
 
    useEffect(() => {
-      // 앱이 시작될 때 인증 상태 확인
       dispatch(checkAuthStatusThunk())
    }, [dispatch])
 
    return (
       <>
          <GlobalStyles />
-         <Navbar />
+         <Navbar isAuthenticated={isAuthenticated} user={user} />
          <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Home isAuthenticated={isAuthenticated} user={user} />} />
             <Route path="/stock/:symbol" element={<StockDetail />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-            {/* <Route path="/post/:id" element={<PostDetail />} />
-            <Route path="/dashboard" element={<MyDashboard />} />
-            <Route path="/stock/:code" element={<ChartPage />} /> */}
+            <Route path="/posts" element={<Posts />} />
+            <Route path="/post/write" element={<WritePost />} />
+            <Route path="/post/edit/:id" element={<EditPost />} />
+            <Route path="/post/:id" element={<PostDetail />} />
+            <Route path="/popular" element={<PopularPosts />} />
             <Route path="/404" element={<NotFound />} />
             <Route path="*" element={<Navigate to="/404" replace />} />
          </Routes>

@@ -87,7 +87,7 @@ router.get('/logout', isLoggedIn, async (req, res, next) => {
 router.get('/status', (req, res) => {
    if (req.isAuthenticated()) {
       res.json({
-         authenticated: true,
+         isAuthenticated: true,
          user: {
             id: req.user.id,
             username: req.user.username,
@@ -96,7 +96,7 @@ router.get('/status', (req, res) => {
       })
    } else {
       res.json({
-         authenticated: false,
+         isAuthenticated: false,
       })
    }
 })
