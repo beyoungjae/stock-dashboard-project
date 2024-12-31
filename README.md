@@ -1,13 +1,6 @@
 # stock-dashboard-project
 
 사용자 세팅
-
-프로젝트 폴더/
-│
-├── server/
-    └── config/
-        └── config.json
-
 config.json 파일의
 
 "development": {
