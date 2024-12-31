@@ -20,7 +20,7 @@ const StockChart = ({ symbol }) => {
             setLoading(true)
             setError(null)
 
-            // 이전 데이터 유지 (스켈레톤 효과)
+            // 이전 데이터 유지 (스켈레톤 효과) 스켈레톤 효과 : 데이터 로딩 중에도 이전 데이터를 보여주는 효과
             if (chartData.length === 0) {
                setChartData(Array(50).fill({ date: '', price: 0, volume: 0 })) // 이전 데이터 유지 (스켈레톤 효과)
             }

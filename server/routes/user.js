@@ -192,7 +192,7 @@ router.get('/:userId/activity', async (req, res) => {
             content: comment.content_text,
             postId: comment.Post?.id,
             postTitle: comment.Post?.title,
-            createdAt: comment.createdAt,
+            createdAt: comment.created_at,
          })),
          ...recentLikes.map((like) => ({
             type: 'POST_LIKE',
