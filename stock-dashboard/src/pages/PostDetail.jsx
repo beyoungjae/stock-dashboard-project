@@ -1,5 +1,5 @@
-import React, { useEffect, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
@@ -23,6 +23,7 @@ const PostDetail = () => {
       }
    }, [dispatch, id])
 
+   // 게시글 삭제 함수
    const handleDelete = async () => {
       if (window.confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
          try {
@@ -34,238 +35,292 @@ const PostDetail = () => {
       }
    }
 
-   const handleLike = useCallback(async () => {
+   // 좋아요 처리, 좋아요가 있는지 확인하고 좋아요 또는 좋아요 취소
+   const handleLike = async () => {
       if (!user) {
-         alert('로그인이 필요합니다.')
+         alert('좋아요를 누르려면 로그인이 필요합니다.')
          return
       }
 
+      // 좋아요 처리 로직
       try {
-         await dispatch(likePost(id)).unwrap()
-         dispatch(getPost(id)) // 게시글 정보 다시 불러오기
+         const isLiked = post.Likes?.some((like) => like.UserId === user.id)
+         if (isLiked) {
+            await dispatch(unlikePost(id)).unwrap()
+         } else {
+            await dispatch(likePost(id)).unwrap()
+         }
       } catch (error) {
-         console.error('좋아요 등록 실패:', error)
+         console.error('좋아요 처리 실패:', error)
       }
-   }, [dispatch, id, user])
+   }
 
-   const handleUnlike = useCallback(async () => {
-      if (!user) {
-         alert('로그인이 필요합니다.')
-         return
-      }
-
-      try {
-         await dispatch(unlikePost(id)).unwrap()
-         dispatch(getPost(id)) // 게시글 정보 다시 불러오기
-      } catch (error) {
-         console.error('좋아요 취소 실패:', error)
-      }
-   }, [dispatch, id, user])
-
+   // 게시글 로딩 중일 때 로딩 상태 표시
    if (loading.currentPost) {
       return (
-         <Container>
+         <LoadingContainer initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <LoadingSpinner animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} />
             <LoadingMessage>게시글을 불러오는 중...</LoadingMessage>
-         </Container>
+         </LoadingContainer>
       )
    }
 
+   // 게시글 로딩 실패 시 오류 메시지 표시
    if (error.currentPost) {
       return (
-         <Container>
+         <ErrorContainer initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <ErrorIcon>⚠️</ErrorIcon>
             <ErrorMessage>{error.currentPost}</ErrorMessage>
-         </Container>
+            <RetryButton onClick={() => dispatch(getPost(id))}>다시 시도</RetryButton>
+         </ErrorContainer>
       )
    }
 
    if (!post) {
       return (
-         <Container>
+         <ErrorContainer initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <ErrorMessage>게시글을 찾을 수 없습니다.</ErrorMessage>
-         </Container>
+         </ErrorContainer>
       )
    }
 
+   // 좋아요 상태 계산
    const isLiked = post.Likes?.some((like) => like.UserId === user?.id)
 
    return (
-      <Container initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-         <PostHeader>
-            <Title>{post.title}</Title>
-            <AuthorInfo>
-               <Author>{post.User.username}</Author>
-               <PostDate>
-                  {formatDistanceToNow(new Date(post.createdAt), {
-                     addSuffix: true,
-                     locale: ko,
-                  })}
-               </PostDate>
-            </AuthorInfo>
-         </PostHeader>
+      <Container>
+         <Article initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <Header>
+               <Title>{post.title}</Title>
+               <MetaInfo>
+                  <Author>{post.User?.username}</Author>
+                  <Separator>•</Separator>
+                  <PostDate>
+                     {/* 게시글 작성 일자 계산 */}
+                     {formatDistanceToNow(new Date(post.createdAt), {
+                        addSuffix: true,
+                        locale: ko,
+                     })}
+                  </PostDate>
+               </MetaInfo>
+            </Header>
 
-         <Content>{post.content}</Content>
+            {post.img && (
+               <ImageContainer>
+                  <PostImage src={`${process.env.REACT_APP_API_URL}${post.img}`} alt={post.title} />
+               </ImageContainer>
+            )}
 
-         <ActionBar>
-            {isLiked ? (
-               <UnlikeButton onClick={handleUnlike}>
-                  <LikeIcon>👍</LikeIcon>
-                  좋아요 취소 ({post.Likes?.length || 0})
-               </UnlikeButton>
-            ) : (
-               <LikeButton onClick={handleLike}>
-                  <LikeIcon>👍</LikeIcon>
-                  좋아요 ({post.Likes?.length || 0})
+            <Content>{post.content}</Content>
+
+            <Actions>
+               <LikeButton onClick={handleLike} $isLiked={isLiked}>
+                  <LikeIcon>{isLiked ? '❤️' : '🤍'}</LikeIcon>
+                  <LikeCount>{post.Likes?.length || 0}</LikeCount>
                </LikeButton>
-            )}
 
-            {user && user.id === post.UserId && (
-               <ButtonGroup>
-                  <EditButton onClick={() => navigate(`/post/edit/${id}`)}>수정</EditButton>
-                  <DeleteButton onClick={handleDelete}>삭제</DeleteButton>
-               </ButtonGroup>
-            )}
-         </ActionBar>
-
+               {user?.id === post.UserId && (
+                  <AuthorActions>
+                     <EditButton as={Link} to={`/post/edit/${post.id}`}>
+                        수정
+                     </EditButton>
+                     <DeleteButton onClick={handleDelete}>삭제</DeleteButton>
+                  </AuthorActions>
+               )}
+            </Actions>
+         </Article>
          <CommentSection>
-            <SectionTitle>댓글</SectionTitle>
             <CommentList postId={id} comments={post.Comments} />
          </CommentSection>
       </Container>
    )
 }
 
-const Container = styled(motion.div)`
-   max-width: 800px;
+const Container = styled.div`
+   max-width: 1000px;
    margin: 0 auto;
    padding: ${({ theme }) => theme.spacing.xl};
 `
 
-const PostHeader = styled.div`
+const Article = styled(motion.article)`
+   background: ${({ theme }) => theme.colors.surface};
+   border: 1px solid ${({ theme }) => theme.colors.border};
+   border-radius: ${({ theme }) => theme.borderRadius.medium};
+   padding: ${({ theme }) => theme.spacing.xl};
+`
+
+const Header = styled.header`
    margin-bottom: ${({ theme }) => theme.spacing.xl};
 `
 
 const Title = styled.h1`
    font-size: ${({ theme }) => theme.typography.fontSizes.xxl};
+   font-weight: ${({ theme }) => theme.typography.fontWeights.bold};
    color: ${({ theme }) => theme.colors.text};
-   margin-bottom: ${({ theme }) => theme.spacing.md};
+   margin: 0 0 ${({ theme }) => theme.spacing.md};
 `
 
-const AuthorInfo = styled.div`
+const MetaInfo = styled.div`
    display: flex;
    align-items: center;
-   gap: ${({ theme }) => theme.spacing.md};
+   gap: ${({ theme }) => theme.spacing.xs};
 `
 
 const Author = styled.span`
    font-size: ${({ theme }) => theme.typography.fontSizes.md};
+   color: ${({ theme }) => theme.colors.primary};
+`
+
+const Separator = styled.span`
    color: ${({ theme }) => theme.colors.textSecondary};
 `
 
 const PostDate = styled.span`
-   font-size: ${({ theme }) => theme.typography.fontSizes.sm};
+   font-size: ${({ theme }) => theme.typography.fontSizes.md};
    color: ${({ theme }) => theme.colors.textSecondary};
+`
+
+const ImageContainer = styled.div`
+   margin: ${({ theme }) => theme.spacing.xl} 0;
+   border-radius: ${({ theme }) => theme.borderRadius.medium};
+   overflow: hidden;
+`
+
+const PostImage = styled.img`
+   width: 100%;
+   height: auto;
+   display: block;
 `
 
 const Content = styled.div`
    font-size: ${({ theme }) => theme.typography.fontSizes.md};
-   line-height: 1.6;
+   line-height: 1.8;
    color: ${({ theme }) => theme.colors.text};
-   margin-bottom: ${({ theme }) => theme.spacing.xl};
    white-space: pre-wrap;
+   margin-bottom: ${({ theme }) => theme.spacing.xl};
 `
 
-const ActionBar = styled.div`
+const Actions = styled.div`
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   padding-top: ${({ theme }) => theme.spacing.lg};
+   border-top: 1px solid ${({ theme }) => theme.colors.border};
+`
+
+const LikeButton = styled.button`
    display: flex;
    align-items: center;
-   justify-content: space-between;
-   margin-bottom: ${({ theme }) => theme.spacing.xl};
-`
-
-const ButtonGroup = styled.div`
-   display: flex;
-   gap: ${({ theme }) => theme.spacing.md};
-`
-
-const Button = styled.button`
-   padding: ${({ theme }) => `${theme.spacing.sm} ${theme.spacing.lg}`};
-   border-radius: ${({ theme }) => theme.borderRadius.small};
-   font-size: ${({ theme }) => theme.typography.fontSizes.md};
+   gap: ${({ theme }) => theme.spacing.sm};
+   padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
+   background: ${({ $isLiked, theme }) => ($isLiked ? `${theme.colors.error}15` : theme.colors.surfaceLight)};
+   border: 1px solid ${({ $isLiked, theme }) => ($isLiked ? theme.colors.error : theme.colors.border)};
+   border-radius: ${({ theme }) => theme.borderRadius.medium};
    cursor: pointer;
    transition: ${({ theme }) => theme.transitions.quick};
-   border: none;
 
    &:hover {
-      opacity: 0.8;
-   }
-`
-
-const LikeButton = styled(Button)`
-   display: flex;
-   align-items: center;
-   gap: ${({ theme }) => theme.spacing.sm};
-   background: none;
-   color: ${({ theme }) => theme.colors.textSecondary};
-   border: none;
-   cursor: pointer;
-   font-size: ${({ theme }) => theme.typography.fontSizes.lg};
-
-   &:hover {
-      color: ${({ theme }) => theme.colors.primary};
-   }
-`
-
-const UnlikeButton = styled(Button)`
-   display: flex;
-   align-items: center;
-   gap: ${({ theme }) => theme.spacing.sm};
-   background: none;
-   color: ${({ theme }) => theme.colors.primary};
-   border: none;
-   cursor: pointer;
-   font-size: ${({ theme }) => theme.typography.fontSizes.lg};
-
-   &:hover {
-      color: ${({ theme }) => theme.colors.error};
+      transform: scale(1.05);
    }
 `
 
 const LikeIcon = styled.span`
-   font-size: ${({ theme }) => theme.typography.fontSizes.xl};
-   transition: transform 0.2s;
+   font-size: ${({ theme }) => theme.typography.fontSizes.lg};
 `
 
-const EditButton = styled(Button)`
+const LikeCount = styled.span`
+   font-size: ${({ theme }) => theme.typography.fontSizes.md};
+   color: ${({ theme }) => theme.colors.text};
+`
+
+const AuthorActions = styled.div`
+   display: flex;
+   gap: ${({ theme }) => theme.spacing.md};
+`
+
+const ActionButton = styled.button`
+   padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.lg};
+   font-size: ${({ theme }) => theme.typography.fontSizes.md};
+   border-radius: ${({ theme }) => theme.borderRadius.medium};
+   cursor: pointer;
+   transition: ${({ theme }) => theme.transitions.quick};
+
+   &:hover {
+      opacity: 0.9;
+   }
+`
+
+const EditButton = styled(ActionButton)`
    background: ${({ theme }) => theme.colors.primary};
    color: ${({ theme }) => theme.colors.surface};
+   border: none;
+   text-decoration: none;
 `
 
-const DeleteButton = styled(Button)`
+const DeleteButton = styled(ActionButton)`
    background: ${({ theme }) => theme.colors.error};
    color: ${({ theme }) => theme.colors.surface};
+   border: none;
 `
 
 const CommentSection = styled.div`
    margin-top: ${({ theme }) => theme.spacing.xl};
 `
 
-const SectionTitle = styled.h2`
-   font-size: ${({ theme }) => theme.typography.fontSizes.xl};
-   color: ${({ theme }) => theme.colors.text};
+const LoadingContainer = styled(motion.div)`
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   padding: ${({ theme }) => theme.spacing.xxl};
+`
+
+const LoadingSpinner = styled(motion.div)`
+   width: 40px;
+   height: 40px;
+   border: 3px solid ${({ theme }) => theme.colors.border};
+   border-top-color: ${({ theme }) => theme.colors.primary};
+   border-radius: 50%;
    margin-bottom: ${({ theme }) => theme.spacing.lg};
 `
 
 const LoadingMessage = styled.div`
-   text-align: center;
-   padding: ${({ theme }) => theme.spacing.xl};
    color: ${({ theme }) => theme.colors.textSecondary};
    font-size: ${({ theme }) => theme.typography.fontSizes.lg};
 `
 
+const ErrorContainer = styled(motion.div)`
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   padding: ${({ theme }) => theme.spacing.xxl};
+`
+
+const ErrorIcon = styled.div`
+   font-size: ${({ theme }) => theme.typography.fontSizes.xxl};
+   margin-bottom: ${({ theme }) => theme.spacing.md};
+`
+
 const ErrorMessage = styled.div`
-   text-align: center;
-   padding: ${({ theme }) => theme.spacing.xl};
    color: ${({ theme }) => theme.colors.error};
    font-size: ${({ theme }) => theme.typography.fontSizes.lg};
+   margin-bottom: ${({ theme }) => theme.spacing.lg};
+`
+
+const RetryButton = styled.button`
+   padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.lg};
+   font-size: ${({ theme }) => theme.typography.fontSizes.md};
+   color: ${({ theme }) => theme.colors.surface};
+   background: ${({ theme }) => theme.colors.primary};
+   border: none;
+   border-radius: ${({ theme }) => theme.borderRadius.medium};
+   cursor: pointer;
+   transition: ${({ theme }) => theme.transitions.quick};
+
+   &:hover {
+      opacity: 0.9;
+   }
 `
 
 export default PostDetail

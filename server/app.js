@@ -47,6 +47,7 @@ const limiter = rateLimit({
    message: '너무 많은 요청을 보내셨습니다. 잠시 후 다시 시도해주세요.',
 })
 
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 app.use('/stock', limiter)
 app.use(morgan('dev'))
 app.use(express.static(path.join(__dirname, 'public')))

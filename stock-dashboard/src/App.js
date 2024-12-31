@@ -12,7 +12,7 @@ import WritePost from './pages/WritePost'
 import PopularPosts from './pages/PopularPosts'
 import EditPost from './pages/EditPost'
 import MyDashboard from './pages/MyDashboard'
-import ChartPage from './pages/ChartPage'
+import MarketPage from './pages/MarketPage'
 import NotFound from './pages/NotFound'
 import StockDetail from './pages/StockDetail'
 import GlobalStyles from './styles/GlobalStyles'
@@ -39,6 +39,8 @@ function App() {
             <Route path="/post/edit/:id" element={<EditPost />} />
             <Route path="/post/:id" element={<PostDetail />} />
             <Route path="/popular" element={<PopularPosts />} />
+            <Route path="/market-overview" element={<MarketPage />} />
+            <Route path="/mypage" element={<MyDashboard />} />
             <Route path="/404" element={<NotFound />} />
             <Route path="*" element={<Navigate to="/404" replace />} />
          </Routes>

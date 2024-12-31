@@ -5,7 +5,7 @@ import * as postAPI from '../../api/post'
 export const createPost = createAsyncThunk('post/create', async (postData, { rejectWithValue }) => {
    try {
       const response = await postAPI.createPost(postData)
-      return response
+      return response.post
    } catch (error) {
       return rejectWithValue(error.message)
    }
@@ -42,9 +42,10 @@ export const getPost = createAsyncThunk('post/getPost', async (postId, { rejectW
 })
 
 // 게시글 수정
-export const updatePost = createAsyncThunk('post/update', async ({ postId, postData }, { rejectWithValue }) => {
+export const updatePost = createAsyncThunk('post/update', async (data, { rejectWithValue }) => {
    try {
-      const response = await postAPI.updatePost(postId, postData)
+      const { id, ...postData } = data
+      const response = await postAPI.updatePost(id, postData)
       return response
    } catch (error) {
       return rejectWithValue(error.message)

@@ -1,29 +1,78 @@
 const express = require('express')
 const router = express.Router()
+const multer = require('multer')
+const path = require('path')
+const fs = require('fs')
 const { Post, User, Like, Comment } = require('../models')
 const { isLoggedIn } = require('../middlewares')
+const Sequelize = require('sequelize')
+
+// uploads 폴더가 존재하는지 확인하고, 없으면 생성
+try {
+   fs.readdirSync('uploads')
+} catch (error) {
+   console.log('uploads 폴더가 없어 uploads 폴더를 생성합니다.')
+   fs.mkdirSync('uploads')
+}
+
+const upload = multer({
+   storage: multer.diskStorage({
+      destination(req, file, cb) {
+         cb(null, 'uploads')
+      },
+      filename(req, file, cb) {
+         const decodedFileName = decodeURIComponent(file.originalname)
+         const ext = path.extname(decodedFileName)
+         const basename = path.basename(decodedFileName, ext)
+         cb(null, basename + Date.now() + ext)
+      },
+   }),
+   limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB
+   },
+   fileFilter: (req, file, cb) => {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif']
+      if (allowedTypes.includes(file.mimetype)) {
+         cb(null, true)
+      } else {
+         cb(new Error('이미지 파일만 업로드 가능합니다.'), false)
+      }
+   },
+})
 
 // 게시글 작성
-router.post('/', isLoggedIn, async (req, res) => {
+router.post('/', isLoggedIn, upload.single('img'), async (req, res) => {
    try {
-      const { title, content } = req.body
       const post = await Post.create({
-         title,
-         content,
+         title: req.body.title,
+         content: req.body.content,
+         img: req.file ? `/uploads/${req.file.filename}` : null,
          UserId: req.user.id,
       })
 
-      const fullPost = await Post.findOne({
+      const newPost = await Post.findOne({
          where: { id: post.id },
          include: [
             {
                model: User,
                attributes: ['id', 'username'],
             },
+            {
+               model: Like,
+               attributes: ['UserId'],
+            },
+            {
+               model: Comment,
+               attributes: ['id'],
+            },
          ],
       })
 
-      res.status(201).json(fullPost)
+      res.status(201).json({
+         success: true,
+         post: newPost,
+         message: '게시글이 성공적으로 작성되었습니다.',
+      })
    } catch (error) {
       console.error('게시글 작성 오류:', error)
       res.status(500).json({ error: '게시글 작성 중 오류가 발생했습니다.' })
@@ -62,6 +111,18 @@ router.get('/', async (req, res) => {
 router.get('/popular', async (req, res) => {
    try {
       const posts = await Post.findAll({
+         attributes: {
+            include: [
+               [
+                  Sequelize.literal(`(
+                     SELECT COUNT(*)
+                     FROM likes
+                     WHERE likes.PostId = Post.id
+                  )`),
+                  'likeCount',
+               ],
+            ],
+         },
          include: [
             {
                model: User,
@@ -69,18 +130,19 @@ router.get('/popular', async (req, res) => {
             },
             {
                model: Like,
-               attributes: ['UserId'],
+               attributes: [], // 집계만 필요하므로 속성은 제외
             },
             {
                model: Comment,
                attributes: ['id'],
+               required: false,
             },
          ],
-         order: [
-            [Like, 'created_at', 'DESC'],
-            ['createdAt', 'DESC'],
-         ],
-         limit: 5,
+         group: ['Post.id', 'User.id', 'Comments.id'],
+         having: Sequelize.literal('likeCount > 0'),
+         order: [[Sequelize.literal('likeCount'), 'DESC']],
+         limit: 10,
+         subQuery: false,
       })
 
       res.json(posts)
@@ -102,7 +164,7 @@ router.get('/:id', async (req, res) => {
             },
             {
                model: Like,
-               attributes: ['UserId', 'created_at'],
+               attributes: ['UserId', 'createdAt'],
             },
             {
                model: Comment,
@@ -128,10 +190,50 @@ router.get('/:id', async (req, res) => {
    }
 })
 
-// 게시글 수정
-router.put('/:id', isLoggedIn, async (req, res) => {
+/* 
+// 게시글 작성
+router.post('/', isLoggedIn, upload.single('img'), async (req, res) => {
    try {
-      const { title, content } = req.body
+      const post = await Post.create({
+         title: req.body.title,
+         content: req.body.content,
+         img: req.file ? `/uploads/${req.file.filename}` : null,
+         UserId: req.user.id,
+      })
+
+      const newPost = await Post.findOne({
+         where: { id: post.id },
+         include: [
+            {
+               model: User,
+               attributes: ['id', 'username'],
+            },
+            {
+               model: Like,
+               attributes: ['UserId'],
+            },
+            {
+               model: Comment,
+               attributes: ['id'],
+            },
+         ],
+      })
+
+      res.status(201).json({
+         success: true,
+         post: newPost,
+         message: '게시글이 성공적으로 작성되었습니다.',
+      })
+   } catch (error) {
+      console.error('게시글 작성 오류:', error)
+      res.status(500).json({ error: '게시글 작성 중 오류가 발생했습니다.' })
+   }
+})
+*/
+
+// 게시글 수정
+router.put('/:id', isLoggedIn, upload.single('img'), async (req, res) => {
+   try {
       const post = await Post.findOne({ where: { id: req.params.id } })
 
       if (!post) {
@@ -142,7 +244,14 @@ router.put('/:id', isLoggedIn, async (req, res) => {
          return res.status(403).json({ error: '게시글을 수정할 권한이 없습니다.' })
       }
 
-      await post.update({ title, content })
+      const updateData = {
+         title: req.body.title,
+         content: req.body.content,
+         img: req.file ? `/uploads/${req.file.filename}` : null,
+         UserId: req.user.id,
+      }
+
+      await post.update(updateData)
 
       // 업데이트된 게시글의 전체 정보를 조회하여 반환
       const updatedPost = await Post.findOne({
@@ -168,7 +277,11 @@ router.put('/:id', isLoggedIn, async (req, res) => {
          ],
       })
 
-      res.json(updatedPost)
+      res.json({
+         success: true,
+         post: updatedPost,
+         message: '게시글이 성공적으로 수정되었습니다.',
+      })
    } catch (error) {
       console.error('게시글 수정 오류:', error)
       res.status(500).json({ error: '게시글 수정 중 오류가 발생했습니다.' })

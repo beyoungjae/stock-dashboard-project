@@ -12,7 +12,12 @@ const api = axios.create({
 // 게시글 작성
 export const createPost = async (postData) => {
    try {
-      const response = await api.post('/', postData)
+      const config = {
+         headers: {
+            'Content-Type': 'multipart/form-data', // 파일 업로드를 위한 헤더
+         },
+      }
+      const response = await api.post('/', postData, config)
       return response.data
    } catch (error) {
       console.error('게시글 작성 오류:', error)
@@ -56,7 +61,12 @@ export const getPost = async (postId) => {
 // 게시글 수정
 export const updatePost = async (postId, postData) => {
    try {
-      const response = await api.put(`/${postId}`, postData)
+      const config = {
+         headers: {
+            'Content-Type': 'multipart/form-data', // 파일 업로드를 위한 헤더
+         },
+      }
+      const response = await api.put(`/${postId}`, postData, config)
       return response.data
    } catch (error) {
       console.error('게시글 수정 오류:', error)

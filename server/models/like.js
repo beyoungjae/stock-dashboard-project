@@ -4,9 +4,14 @@ module.exports = class Like extends Sequelize.Model {
    static init(sequelize) {
       return super.init(
          {
-            created_at: {
+            id: {
+               type: Sequelize.INTEGER,
+               primaryKey: true,
+               autoIncrement: true,
+            },
+            createdAt: {
                type: Sequelize.DATE,
-               allowNull: true,
+               allowNull: false,
                defaultValue: Sequelize.NOW,
             },
          },

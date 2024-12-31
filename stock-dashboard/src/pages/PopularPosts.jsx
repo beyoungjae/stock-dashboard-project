@@ -2,52 +2,76 @@ import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
-import { getPopularPosts, selectPopularPosts, selectPostLoading, selectPostError } from '../store/slices/postSlice'
 import PostList from '../components/PostList'
+import { getPopularPosts } from '../store/slices/postSlice'
 
 const PopularPosts = () => {
    const dispatch = useDispatch()
-   const posts = useSelector(selectPopularPosts)
-   const loading = useSelector(selectPostLoading)
-   const error = useSelector(selectPostError)
+   const { popularPosts, loading, error } = useSelector(
+      // 인기 게시글 상태 선택
+      (state) => ({
+         popularPosts: state.post.popularPosts, // 인기 게시글 목록
+         loading: state.post.loading.popularPosts, // 인기 게시글 로딩 상태
+         error: state.post.error.popularPosts, // 인기 게시글 오류 상태
+      }),
+      (prev, next) => {
+         return prev.popularPosts === next.popularPosts && prev.loading === next.loading && prev.error === next.error
+      }
+   )
 
+   // 인기 게시글 목록 로드
    useEffect(() => {
       dispatch(getPopularPosts())
    }, [dispatch])
 
    return (
-      <Container initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-         <Header>
+      <Container>
+         <Header initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
             <Title>인기 게시글</Title>
-            <Subtitle>가장 많은 관심을 받은 게시글들입니다</Subtitle>
+            <Description>가장 많은 관심을 받은 게시글들을 모아봤습니다. 좋아요 수가 많은 인기 있는 게시글들을 확인해보세요.</Description>
          </Header>
 
-         <PostList posts={posts} loading={loading.popularPosts} error={error.popularPosts} />
+         <Content>
+            <PostList posts={popularPosts} loading={loading} error={error} />
+         </Content>
       </Container>
    )
 }
 
-const Container = styled(motion.div)`
-   max-width: 1200px;
+const Container = styled.div`
+   max-width: 1600px;
    margin: 0 auto;
    padding: ${({ theme }) => theme.spacing.xl};
 `
 
-const Header = styled.div`
-   text-align: center;
+const Header = styled(motion.div)`
    margin-bottom: ${({ theme }) => theme.spacing.xxl};
+   padding: ${({ theme }) => theme.spacing.xl};
+   background: ${({ theme }) => theme.colors.surface};
+   border: 1px solid ${({ theme }) => theme.colors.border};
+   border-radius: ${({ theme }) => theme.borderRadius.medium};
 `
 
 const Title = styled.h1`
    font-size: ${({ theme }) => theme.typography.fontSizes.xxl};
+   font-weight: ${({ theme }) => theme.typography.fontWeights.bold};
    color: ${({ theme }) => theme.colors.text};
-   margin-bottom: ${({ theme }) => theme.spacing.md};
+   margin: 0 0 ${({ theme }) => theme.spacing.md};
+   background: linear-gradient(to right, ${({ theme }) => theme.colors.primary}, ${({ theme }) => theme.colors.secondary});
+   -webkit-background-clip: text;
+   -webkit-text-fill-color: transparent;
 `
 
-const Subtitle = styled.p`
-   font-size: ${({ theme }) => theme.typography.fontSizes.lg};
+const Description = styled.p`
+   font-size: ${({ theme }) => theme.typography.fontSizes.md};
    color: ${({ theme }) => theme.colors.textSecondary};
+   line-height: 1.6;
    margin: 0;
+   max-width: 800px;
+`
+
+const Content = styled.div`
+   margin-top: ${({ theme }) => theme.spacing.xl};
 `
 
 export default PopularPosts

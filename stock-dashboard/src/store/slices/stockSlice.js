@@ -116,6 +116,17 @@ export const getQuote = createAsyncThunk('stock/getQuote', async (symbol, { reje
    }
 })
 
+// 시장 개요 조회
+export const fetchMarketOverview = createAsyncThunk('stock/fetchMarketOverview', async (_, { rejectWithValue }) => {
+   try {
+      const response = await stockAPI.getMarketOverview()
+      return response
+   } catch (error) {
+      console.error('시장 개요 조회 오류:', error)
+      return rejectWithValue(error.message)
+   }
+})
+
 const initialState = {
    searchResults: [],
    currentStock: null,
@@ -126,11 +137,13 @@ const initialState = {
       search: 'idle',
       quote: 'idle',
       chart: 'idle',
+      marketOverview: 'idle',
    },
    error: {
       search: null,
       quote: null,
       chart: null,
+      marketOverview: null,
    },
 }
 
@@ -169,6 +182,7 @@ const stockSlice = createSlice({
             state.error.search = action.payload
             state.searchResults = []
          })
+
          // 주식 조회
          .addCase(getQuote.pending, (state) => {
             state.status.quote = 'loading'
@@ -184,6 +198,7 @@ const stockSlice = createSlice({
             state.error.quote = action.payload
             state.currentStock = null
          })
+
          // 실시간 업데이트
          .addCase(updateQuote, (state, action) => {
             state.currentStock = action.payload
@@ -194,9 +209,26 @@ const stockSlice = createSlice({
             state.status.quote = 'failed'
             state.error.quote = action.payload
          })
+
          // 연결 상태 업데이트
          .addCase(setConnectionStatus, (state, action) => {
             state.isConnected = action.payload
+         })
+
+         // 시장 개요 조회
+         .addCase(fetchMarketOverview.pending, (state) => {
+            state.status.marketOverview = 'loading'
+            state.error.marketOverview = null
+         })
+         .addCase(fetchMarketOverview.fulfilled, (state, action) => {
+            state.status.marketOverview = 'succeeded'
+            state.marketOverview = action.payload
+            state.error.marketOverview = null
+         })
+         .addCase(fetchMarketOverview.rejected, (state, action) => {
+            state.status.marketOverview = 'failed'
+            state.error.marketOverview = action.payload
+            state.marketOverview = null
          })
    },
 })
@@ -208,5 +240,8 @@ export const selectCurrentStock = (state) => state.stock?.currentStock || null /
 export const selectStatus = (state) => state.stock?.status || { search: 'idle', quote: 'idle', chart: 'idle' } // 상태 선택
 export const selectErrors = (state) => state.stock?.error || { search: null, quote: null, chart: null } // 오류 선택
 export const selectConnectionStatus = (state) => state.stock?.isConnected ?? false // 연결 상태 선택
+export const selectMarketOverview = (state) => state.stock?.marketOverview || null // 시장 개요 선택
+export const selectMarketOverviewStatus = (state) => state.stock?.status.marketOverview || 'idle' // 시장 개요 상태 선택
+export const selectMarketOverviewError = (state) => state.stock?.error.marketOverview || null // 시장 개요 오류 선택
 
 export default stockSlice.reducer

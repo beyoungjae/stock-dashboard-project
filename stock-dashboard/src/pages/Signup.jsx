@@ -17,6 +17,7 @@ const Signup = () => {
    const [error, setError] = useState(null)
    const [isLoading, setIsLoading] = useState(false)
 
+   // 입력 필드 변경
    const handleChange = (e) => {
       const { name, value } = e.target
       setFormData((prev) => ({
@@ -25,6 +26,7 @@ const Signup = () => {
       }))
    }
 
+   // 회원가입 전송
    const handleSubmit = async (e) => {
       e.preventDefault()
       setError(null)
@@ -49,8 +51,10 @@ const Signup = () => {
                password: formData.password,
                nickname: formData.nickname,
             })
+            // 전송 후 로그인 페이지 이동 후 새로고침
          ).unwrap()
          navigate('/login')
+         window.location.reload()
       } catch (error) {
          setError(error.message || '회원가입에 실패했습니다.')
          console.error('회원가입 실패:', error)

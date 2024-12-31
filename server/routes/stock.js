@@ -9,20 +9,32 @@ const CACHE_DURATION = 5 * 60 * 1000 // 5분
 // Yahoo Finance API 설정
 const yahooFinanceOptions = {
    queue: {
-      concurrent: 1,
-      interval: 3000,
-      intervalCap: 1,
+      concurrent: 1, // 동시 요청 수 (1로 제한)
+      interval: 5000, // 요청 간격 (5000ms = 5초)
+      intervalCap: 1, // 요청 제한 (1로 제한)
    },
    fetchOptions: {
-      timeout: 30000,
+      timeout: 30000, // 요청 타임아웃 (30초)
       headers: {
+         // User-Agent 예시
+         /* 
+         firefox(맥용) < pc에서는 이렇게 설정해야 함 모바일에서는 잘 안됨
+         Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:89.0) Gecko/20100101 Firefox/89.0
+
+         safari(ios용) < 모바일에서는 이렇게 설정해야 함 pc에서는 잘 안됨
+         Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1
+
+         windows chrome (winodws용)
+         Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36
+         Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)' + ' Chrome/95.0.4638.69 Safari/537.36
+         */
          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)' + ' Chrome/95.0.4638.69 Safari/537.36',
-         'Accept-Language': 'en-US,en;q=0.9',
-         Accept: 'application/json,text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-         'Accept-Encoding': 'gzip, deflate, br',
-         Connection: 'keep-alive',
-         'Cache-Control': 'no-cache',
-         Pragma: 'no-cache',
+         'Accept-Language': 'en-US,en;q=0.9', // 언어 설정
+         Accept: 'application/json,text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', // Accept: 서버가 반환할 수 있는 콘텐츠 타입 지정
+         'Accept-Encoding': 'gzip, deflate, br', // 클라이언트가 이해할 수 있는 압축 방식 지정
+         Connection: 'keep-alive', // 연결 유지
+         'Cache-Control': 'no-cache', // 캐싱 방지
+         Pragma: 'no-cache', // 캐싱 방지 (하위 호환성)
       },
    },
 }
@@ -32,33 +44,33 @@ const isMarketOpen = (symbol) => {
    const now = new Date()
    const day = now.getDay()
 
-   if (day === 0 || day === 6) return false
+   if (day === 0 || day === 6) return false // 주말 휴장
 
    if (symbol.endsWith('.KS')) {
       const korTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
       const hour = korTime.getHours()
-      return hour >= 9 && hour < 15.5
+      return hour >= 9 && hour < 15.5 // 한국 시장 개장 시간
    }
 
    const nyTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }))
    const hour = nyTime.getHours()
-   return hour >= 9.5 && hour < 16
+   return hour >= 9.5 && hour < 16 // 미국 시장 개장 시간
 }
 
 // 데이터 포맷팅
 const formatQuoteData = (quote, marketStatus = 'CLOSED') => ({
-   symbol: quote.symbol,
-   name: quote.shortName || quote.longName,
-   price: quote.regularMarketPrice,
-   change: quote.regularMarketChange,
-   changePercent: quote.regularMarketChangePercent,
-   volume: quote.regularMarketVolume,
-   marketCap: quote.marketCap,
-   exchange: quote.exchange,
-   fiftyTwoWeekHigh: quote.fiftyTwoWeekHigh,
-   fiftyTwoWeekLow: quote.fiftyTwoWeekLow,
-   marketStatus,
-   timestamp: new Date().toISOString(),
+   symbol: quote.symbol, // 심볼
+   name: quote.shortName || quote.longName, // 이름
+   price: quote.regularMarketPrice, // 가격
+   change: quote.regularMarketChange, // 변동
+   changePercent: quote.regularMarketChangePercent, // 변동률
+   volume: quote.regularMarketVolume, // 거래량
+   marketCap: quote.marketCap, // 시가총액
+   exchange: quote.exchange, // 거래소
+   fiftyTwoWeekHigh: quote.fiftyTwoWeekHigh, // 52주 최고가
+   fiftyTwoWeekLow: quote.fiftyTwoWeekLow, // 52주 최저가
+   marketStatus, // 시장 상태
+   timestamp: new Date().toISOString(), // 타임스탬프: 현재 시간
 })
 
 // 날짜 범위 계산 함수
@@ -160,10 +172,10 @@ router.get('/quote/:symbol', async (req, res) => {
 
    // SSE 헤더 설정
    res.writeHead(200, {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      Connection: 'keep-alive',
-      'Access-Control-Allow-Origin': '*',
+      'Content-Type': 'text/event-stream', // SSE 헤더 설정 실시간으로 시세를 조회하려면 필요
+      'Cache-Control': 'no-cache', // 캐시 방지
+      Connection: 'keep-alive', // 연결 유지
+      'Access-Control-Allow-Origin': '*', // 모든 출처 허용
    })
 
    // 연결 시작 알림

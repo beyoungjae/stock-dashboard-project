@@ -54,7 +54,14 @@ const EditPost = () => {
 
    return (
       <Container initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-         <PostForm initialData={post} />
+         <PostForm
+            initialData={{
+               id: post.id,
+               title: post.title,
+               content: post.content,
+               img: post.img,
+            }}
+         />
       </Container>
    )
 }
