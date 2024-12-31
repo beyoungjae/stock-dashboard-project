@@ -5,8 +5,8 @@
 프로젝트 폴더/
 │
 ├── server/
-└── config/
-└── config.json
+    └── config/
+        └── config.json
 
 config.json 파일의
 
