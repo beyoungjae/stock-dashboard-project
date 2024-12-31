@@ -1,40 +1,64 @@
-import React from 'react'
+import { useEffect } from 'react'
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
+import { useDispatch, useSelector } from 'react-redux'
 import ActivityList from '../components/ActivityList'
+import UserStats from '../components/UserStats'
+import { getUserActivityThunk } from '../store/slices/userSlice'
 
 const MyDashboard = () => {
+   const dispatch = useDispatch()
+   const { user } = useSelector((state) => state.auth)
+   const { loading, error } = useSelector((state) => state.user)
+
+   useEffect(() => {
+      if (user?.id) {
+         dispatch(getUserActivityThunk(user.id))
+      }
+   }, [dispatch, user?.id])
+
+   if (!user) return <div>로그인이 필요합니다.</div>
+   if (loading) return <div>Loading...</div>
+   if (error) return <div>Error: {error}</div>
+
    return (
-      <Container>
-         <Header initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-            <Title>내 대시보드</Title>
-            <Description>최근 활동 내역을 확인하고 관리하세요. 종목 조회, 관심 목록 추가, 게시글 작성 등 모든 활동을 한눈에 볼 수 있습니다.</Description>
+      <DashboardContainer>
+         <Header initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} style={{ marginBottom: '1.5rem' }}>
+            <Title>나의 대시보드</Title>
+            <Description>안녕하세요, {user.username}님!</Description>
          </Header>
+
          <Content>
             <Section>
                <SectionHeader>
+                  <SectionTitle>활동 통계</SectionTitle>
+                  <SectionDescription>지금까지의 활동 내역을 확인해보세요.</SectionDescription>
+               </SectionHeader>
+               <UserStats />
+            </Section>
+            <Section>
+               <SectionHeader>
                   <SectionTitle>최근 활동</SectionTitle>
-                  <SectionDescription>최근 7일간의 활동 내역입니다.</SectionDescription>
+                  <SectionDescription>최근 작성한 게시글, 댓글, 좋아요 내역입니다.</SectionDescription>
                </SectionHeader>
                <ActivityList />
             </Section>
          </Content>
-      </Container>
+      </DashboardContainer>
    )
 }
 
-const Container = styled.div`
-   max-width: 1600px;
+const DashboardContainer = styled.div`
+   max-width: 1200px;
    margin: 0 auto;
    padding: ${({ theme }) => theme.spacing.xl};
 `
 
 const Header = styled(motion.div)`
-   margin-bottom: ${({ theme }) => theme.spacing.xxl};
    padding: ${({ theme }) => theme.spacing.xl};
    background: ${({ theme }) => theme.colors.surface};
-   border: 1px solid ${({ theme }) => theme.colors.border};
    border-radius: ${({ theme }) => theme.borderRadius.medium};
+   box-shadow: ${({ theme }) => theme.shadows.medium};
 `
 
 const Title = styled.h1`
@@ -42,17 +66,12 @@ const Title = styled.h1`
    font-weight: ${({ theme }) => theme.typography.fontWeights.bold};
    color: ${({ theme }) => theme.colors.text};
    margin: 0 0 ${({ theme }) => theme.spacing.md};
-   background: linear-gradient(to right, ${({ theme }) => theme.colors.primary}, ${({ theme }) => theme.colors.secondary});
-   -webkit-background-clip: text;
-   -webkit-text-fill-color: transparent;
 `
 
 const Description = styled.p`
    font-size: ${({ theme }) => theme.typography.fontSizes.md};
    color: ${({ theme }) => theme.colors.textSecondary};
-   line-height: 1.6;
    margin: 0;
-   max-width: 800px;
 `
 
 const Content = styled.div`
@@ -62,13 +81,14 @@ const Content = styled.div`
 `
 
 const Section = styled.section`
-   display: flex;
-   flex-direction: column;
-   gap: ${({ theme }) => theme.spacing.lg};
+   background: ${({ theme }) => theme.colors.surface};
+   border-radius: ${({ theme }) => theme.borderRadius.medium};
+   padding: ${({ theme }) => theme.spacing.xl};
+   box-shadow: ${({ theme }) => theme.shadows.medium};
 `
 
 const SectionHeader = styled.div`
-   margin-bottom: ${({ theme }) => theme.spacing.md};
+   margin-bottom: ${({ theme }) => theme.spacing.lg};
 `
 
 const SectionTitle = styled.h2`

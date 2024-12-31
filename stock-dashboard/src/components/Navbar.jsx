@@ -95,7 +95,7 @@ const Navbar = ({ user }) => {
    )
 }
 
-const NavContainer = styled(motion.header)`
+const NavContainer = motion(styled.header`
    position: sticky;
    top: 0;
    z-index: 1000;
@@ -105,7 +105,7 @@ const NavContainer = styled(motion.header)`
    display: flex;
    align-items: center;
    padding: ${({ theme }) => theme.spacing.md} ${({ theme }) => theme.spacing.xl};
-`
+`)
 
 const MenuButton = styled.button`
    background: none;

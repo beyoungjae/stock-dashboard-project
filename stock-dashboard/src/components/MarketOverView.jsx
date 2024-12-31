@@ -63,63 +63,73 @@ const MarketOverview = () => {
       <Container>
          <MarketGrid>
             <AnimatePresence>
-               {marketOverview.map((item) => (
-                  <MarketCard key={item.symbol} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} whileHover={{ y: -5, transition: { duration: 0.2 } }}>
-                     <MarketHeader>
-                        <MarketInfo>
-                           <MarketName>{item.shortName}</MarketName>
-                           <MarketSymbol>{item.symbol}</MarketSymbol>
-                        </MarketInfo>
-                        <MarketStatus $isOpen={item.marketState === 'OPEN'}>{item.marketState === 'OPEN' ? '거래중' : '거래종료'}</MarketStatus>
-                     </MarketHeader>
+               {marketOverview.map((item) => {
+                  if (!item) return null // 데이터가 없으면 렌더링하지 않음
 
-                     <PriceInfo>
-                        <CurrentPrice>
-                           {item.regularMarketPrice.toLocaleString()} {item.currency}
-                        </CurrentPrice>
-                        <PriceChange $isPositive={item.regularMarketChangePercent >= 0}>
-                           {item.regularMarketChangePercent >= 0 ? '+' : ''}
-                           {item.regularMarketChangePercent.toFixed(2)}%
-                        </PriceChange>
-                     </PriceInfo>
+                  const price = item.price || 0 // 가격이 없는 경우 기본값 설정
+                  const changePercent = item.changePercent || 0 // 변동률이 없는 경우 기본값 설정
+                  const regularMarketVolume = item.regularMarketVolume || 0 // 거래량이 없는 경우 기본값 설정
+                  const fiftyTwoWeekHigh = item.fiftyTwoWeekHigh || 0 // 52주 최고가가 없는 경우 기본값 설정
+                  const fiftyTwoWeekLow = item.fiftyTwoWeekLow || 0 // 52주 최저가가 없는 경우 기본값 설정
 
-                     <ChartContainer>
-                        <ResponsiveContainer width="100%" height={150}>
-                           <LineChart data={formatChartData(item)} margin={{ top: 10, right: 10, left: 10, bottom: 5 }}>
-                              <CartesianGrid strokeDasharray="3 3" stroke="#2C2C2C" vertical={false} />
-                              <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#A0A0A0' }} axisLine={false} tickLine={false} />
-                              <YAxis tick={{ fontSize: 12, fill: '#A0A0A0' }} axisLine={false} tickLine={false} domain={['auto', 'auto']} tickFormatter={(value) => value.toLocaleString()} />
-                              <Tooltip
-                                 contentStyle={{
-                                    background: '#1E1E1E',
-                                    border: '1px solid #333',
-                                    borderRadius: '4px',
-                                    padding: '8px',
-                                 }}
-                                 labelStyle={{ color: '#A0A0A0' }}
-                                 formatter={(value) => value.toLocaleString()}
-                              />
-                              <Line type="monotone" dataKey="가격" stroke={item.regularMarketChangePercent >= 0 ? '#26A69A' : '#EF5350'} strokeWidth={2} dot={{ strokeWidth: 2 }} activeDot={{ r: 6, strokeWidth: 0 }} />
-                           </LineChart>
-                        </ResponsiveContainer>
-                     </ChartContainer>
+                  return (
+                     <MarketCard key={item.symbol} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} whileHover={{ y: -5, transition: { duration: 0.2 } }}>
+                        <MarketHeader>
+                           <MarketInfo>
+                              <MarketName>{item.name}</MarketName>
+                              <MarketSymbol>{item.symbol}</MarketSymbol>
+                           </MarketInfo>
+                           <MarketStatus $isOpen={item.marketState === 'OPEN'}>{item.marketState === 'OPEN' ? '거래중' : '거래종료'}</MarketStatus>
+                        </MarketHeader>
 
-                     <MarketDetails>
-                        <DetailItem>
-                           <DetailLabel>거래량</DetailLabel>
-                           <DetailValue>{item.regularMarketVolume.toLocaleString()}</DetailValue>
-                        </DetailItem>
-                        <DetailItem>
-                           <DetailLabel>52주 최고</DetailLabel>
-                           <DetailValue>{item.fiftyTwoWeekHigh?.toLocaleString()}</DetailValue>
-                        </DetailItem>
-                        <DetailItem>
-                           <DetailLabel>52주 최저</DetailLabel>
-                           <DetailValue>{item.fiftyTwoWeekLow?.toLocaleString()}</DetailValue>
-                        </DetailItem>
-                     </MarketDetails>
-                  </MarketCard>
-               ))}
+                        <PriceInfo>
+                           <CurrentPrice>
+                              {price.toLocaleString()} {item.currency}
+                           </CurrentPrice>
+                           <PriceChange $isPositive={changePercent >= 0}>
+                              {changePercent >= 0 ? '+' : ''}
+                              {changePercent.toFixed(2)}%
+                           </PriceChange>
+                        </PriceInfo>
+
+                        <ChartContainer>
+                           <ResponsiveContainer width="100%" height={150}>
+                              <LineChart data={formatChartData(item)} margin={{ top: 10, right: 10, left: 10, bottom: 5 }}>
+                                 <CartesianGrid strokeDasharray="3 3" stroke="#2C2C2C" vertical={false} />
+                                 <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#A0A0A0' }} axisLine={false} tickLine={false} />
+                                 <YAxis tick={{ fontSize: 12, fill: '#A0A0A0' }} axisLine={false} tickLine={false} domain={['auto', 'auto']} tickFormatter={(value) => value.toLocaleString()} />
+                                 <Tooltip
+                                    contentStyle={{
+                                       background: '#1E1E1E',
+                                       border: '1px solid #333',
+                                       borderRadius: '4px',
+                                       padding: '8px',
+                                    }}
+                                    labelStyle={{ color: '#A0A0A0' }}
+                                    formatter={(value) => value.toLocaleString()}
+                                 />
+                                 <Line type="monotone" dataKey="가격" stroke={changePercent >= 0 ? '#26A69A' : '#EF5350'} strokeWidth={2} dot={{ strokeWidth: 2 }} activeDot={{ r: 6, strokeWidth: 0 }} />
+                              </LineChart>
+                           </ResponsiveContainer>
+                        </ChartContainer>
+
+                        <MarketDetails>
+                           <DetailItem>
+                              <DetailLabel>거래량</DetailLabel>
+                              <DetailValue>{regularMarketVolume.toLocaleString()}</DetailValue>
+                           </DetailItem>
+                           <DetailItem>
+                              <DetailLabel>52주 최고</DetailLabel>
+                              <DetailValue>{fiftyTwoWeekHigh.toLocaleString()}</DetailValue>
+                           </DetailItem>
+                           <DetailItem>
+                              <DetailLabel>52주 최저</DetailLabel>
+                              <DetailValue>{fiftyTwoWeekLow.toLocaleString()}</DetailValue>
+                           </DetailItem>
+                        </MarketDetails>
+                     </MarketCard>
+                  )
+               })}
             </AnimatePresence>
          </MarketGrid>
       </Container>

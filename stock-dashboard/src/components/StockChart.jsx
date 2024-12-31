@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Area, ResponsiveContainer, ComposedChart } from 'recharts'
+import { XAxis, YAxis, CartesianGrid, Tooltip, Area, ResponsiveContainer, ComposedChart } from 'recharts'
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
 import { stockAPI } from '../api/stock'
@@ -92,6 +92,7 @@ const StockChart = ({ symbol }) => {
       return () => {
          isMounted = false
       }
+      // eslint-disable-next-line
    }, [symbol, chartRange, chartInterval])
 
    // 차트 범위 변경

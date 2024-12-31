@@ -1,10 +1,12 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import * as postAPI from '../../api/post'
+import { getUserActivityThunk } from './userSlice'
 
 // 게시글 작성
-export const createPost = createAsyncThunk('post/create', async (postData, { rejectWithValue }) => {
+export const createPost = createAsyncThunk('post/create', async (postData, { dispatch, rejectWithValue }) => {
    try {
       const response = await postAPI.createPost(postData)
+      dispatch(getUserActivityThunk(postData.get('UserId'))) // 사용자 활동 조회
       return response.post
    } catch (error) {
       return rejectWithValue(error.message)
@@ -88,9 +90,9 @@ export const deletePost = createAsyncThunk('post/delete', async (postId, { rejec
 // 게시글 좋아요
 export const likePost = createAsyncThunk('post/like', async (postId, { dispatch, rejectWithValue }) => {
    try {
-      await postAPI.likePost(postId)
+      const response = await postAPI.likePost(postId)
       dispatch(getPost(postId)) // 게시글 정보 다시 불러오기
-      return postId
+      return response.userId // 좋아요를 누른 사용자 ID 반환
    } catch (error) {
       return rejectWithValue(error.message)
    }
@@ -99,9 +101,9 @@ export const likePost = createAsyncThunk('post/like', async (postId, { dispatch,
 // 게시글 좋아요 취소
 export const unlikePost = createAsyncThunk('post/unlike', async (postId, { dispatch, rejectWithValue }) => {
    try {
-      await postAPI.unlikePost(postId)
+      const response = await postAPI.unlikePost(postId)
       dispatch(getPost(postId)) // 게시글 정보 다시 불러오기
-      return postId
+      return response.userId // 좋아요를 취소한 사용자 ID 반환
    } catch (error) {
       return rejectWithValue(error.message)
    }
@@ -262,7 +264,9 @@ const postSlice = createSlice({
          })
          .addCase(likePost.fulfilled, (state, action) => {
             state.loading.like = false
-            state.currentPost.Likes = [...(state.currentPost.Likes || []), action.payload]
+            if (state.currentPost) {
+               state.currentPost.Likes = [...(state.currentPost.Likes || []), { UserId: action.payload }]
+            }
          })
          .addCase(likePost.rejected, (state, action) => {
             state.loading.like = false
@@ -276,7 +280,9 @@ const postSlice = createSlice({
          })
          .addCase(unlikePost.fulfilled, (state, action) => {
             state.loading.like = false
-            state.currentPost.Likes = state.currentPost.Likes.filter((like) => like !== action.payload)
+            if (state.currentPost) {
+               state.currentPost.Likes = state.currentPost.Likes.filter((like) => like.UserId !== action.payload)
+            }
          })
          .addCase(unlikePost.rejected, (state, action) => {
             state.loading.like = false

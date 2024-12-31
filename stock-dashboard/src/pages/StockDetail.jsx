@@ -453,28 +453,4 @@ const ErrorMessage = styled.div`
    border: 1px solid ${({ theme }) => theme.colors.border};
 `
 
-const ActionButton = styled(motion.button)`
-   padding: ${({ theme }) => theme.spacing.md} ${({ theme }) => theme.spacing.xl};
-   background: ${({ theme }) => theme.colors.primary};
-   color: ${({ theme }) => theme.colors.surface};
-   border: none;
-   border-radius: ${({ theme }) => theme.borderRadius.medium};
-   cursor: pointer;
-   font-size: ${({ theme }) => theme.typography.fontSizes.md};
-   width: 100%;
-   transition: ${({ theme }) => theme.transitions.quick};
-`
-
-const RefreshButton = styled(motion.button)`
-   padding: ${({ theme }) => theme.spacing.md} ${({ theme }) => theme.spacing.xl};
-   background: ${({ theme }) => theme.colors.primary};
-   color: ${({ theme }) => theme.colors.surface};
-   border: none;
-   border-radius: ${({ theme }) => theme.borderRadius.medium};
-   cursor: pointer;
-   font-size: ${({ theme }) => theme.typography.fontSizes.md};
-   width: 100%;
-   transition: ${({ theme }) => theme.transitions.quick};
-`
-
 export default StockDetail

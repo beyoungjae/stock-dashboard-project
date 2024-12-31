@@ -97,10 +97,12 @@ const PostDetail = () => {
                   <Separator>•</Separator>
                   <PostDate>
                      {/* 게시글 작성 일자 계산 */}
-                     {formatDistanceToNow(new Date(post.createdAt), {
-                        addSuffix: true,
-                        locale: ko,
-                     })}
+                     {post.createdAt
+                        ? formatDistanceToNow(new Date(post.createdAt), {
+                             addSuffix: true,
+                             locale: ko,
+                          })
+                        : '방금 전'}
                   </PostDate>
                </MetaInfo>
             </Header>

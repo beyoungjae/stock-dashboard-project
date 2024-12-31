@@ -28,7 +28,7 @@ const yahooFinanceOptions = {
          Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36
          Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)' + ' Chrome/95.0.4638.69 Safari/537.36
          */
-         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)' + ' Chrome/95.0.4638.69 Safari/537.36',
+         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:89.0) Gecko/20100101 Firefox/89.0',
          'Accept-Language': 'en-US,en;q=0.9', // 언어 설정
          Accept: 'application/json,text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', // Accept: 서버가 반환할 수 있는 콘텐츠 타입 지정
          'Accept-Encoding': 'gzip, deflate, br', // 클라이언트가 이해할 수 있는 압축 방식 지정
@@ -44,17 +44,17 @@ const isMarketOpen = (symbol) => {
    const now = new Date()
    const day = now.getDay()
 
-   if (day === 0 || day === 6) return false // 주말 휴장
+   if (day === 0 || day === 6) return false
 
    if (symbol.endsWith('.KS')) {
-      const korTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
+      const korTime = new Date(now.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }))
       const hour = korTime.getHours()
-      return hour >= 9 && hour < 15.5 // 한국 시장 개장 시간
+      return hour >= 9 && hour < 15.5
    }
 
    const nyTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }))
    const hour = nyTime.getHours()
-   return hour >= 9.5 && hour < 16 // 미국 시장 개장 시간
+   return hour >= 9.5 && hour < 16
 }
 
 // 데이터 포맷팅
@@ -74,7 +74,7 @@ const formatQuoteData = (quote, marketStatus = 'CLOSED') => ({
 })
 
 // 날짜 범위 계산 함수
-const getDateRange = (range) => {
+const getDateRange = (range, symbol) => {
    const end = new Date()
    let start = new Date()
 
@@ -82,8 +82,8 @@ const getDateRange = (range) => {
       case '1d':
          start = new Date(end)
          start.setHours(0, 0, 0, 0)
-         // 미국 주식의 경우 전날 데이터도 포함
-         if (end.getHours() < 9) {
+         // 시장이 닫혀 있으면 전날 데이터 포함
+         if (!isMarketOpen(symbol)) {
             start.setDate(start.getDate() - 1)
          }
          break
@@ -172,10 +172,10 @@ router.get('/quote/:symbol', async (req, res) => {
 
    // SSE 헤더 설정
    res.writeHead(200, {
-      'Content-Type': 'text/event-stream', // SSE 헤더 설정 실시간으로 시세를 조회하려면 필요
-      'Cache-Control': 'no-cache', // 캐시 방지
-      Connection: 'keep-alive', // 연결 유지
-      'Access-Control-Allow-Origin': '*', // 모든 출처 허용
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+      'Access-Control-Allow-Origin': '*',
    })
 
    // 연결 시작 알림
@@ -256,8 +256,8 @@ router.get('/chart/:symbol', async (req, res) => {
          return res.json(cachedData.data)
       }
 
-      // 날짜 범위 계산
-      const { period1, period2 } = getDateRange(range)
+      // 날짜 범위 계산 (시장 상태에 따라 이전 날짜 포함)
+      const { period1, period2 } = getDateRange(range, symbol)
 
       // Yahoo Finance API 옵션 설정
       const queryOptions = {
@@ -366,21 +366,47 @@ router.get('/chart/:symbol', async (req, res) => {
 router.get('/market-overview', async (req, res) => {
    try {
       const indices = ['^GSPC', '^DJI', '^IXIC', '^KS11', '^KQ11'] // S&P 500, 다우, 나스닥, 코스피, 코스닥
+
+      // 병렬로 시세 조회
       const quotes = await Promise.all(
          indices.map(async (symbol) => {
             try {
-               return await yahooFinance.quote(symbol)
+               const quote = await yahooFinance.quote(symbol)
+               if (!quote || !quote.regularMarketPrice) {
+                  console.error(`${symbol} 시세 데이터가 유효하지 않습니다.`)
+                  return null
+               }
+
+               return {
+                  symbol: quote.symbol,
+                  name: quote.shortName || quote.longName || 'N/A', // 이름이 없는 경우 기본값 설정
+                  price: quote.regularMarketPrice || 0, // 가격이 없는 경우 기본값 설정
+                  change: quote.regularMarketChange || 0, // 변동이 없는 경우 기본값 설정
+                  changePercent: quote.regularMarketChangePercent || 0, // 변동률이 없는 경우 기본값 설정
+                  marketState: quote.marketState || 'CLOSED', // 시장 상태가 없는 경우 기본값 설정
+                  regularMarketPreviousClose: quote.regularMarketPreviousClose || 0, // 전일 종가가 없는 경우 기본값 설정
+                  currency: quote.currency || 'USD', // 통화가 없는 경우 기본값 설정
+                  regularMarketVolume: quote.regularMarketVolume || 0, // 거래량이 없는 경우 기본값 설정
+                  fiftyTwoWeekHigh: quote.fiftyTwoWeekHigh || 0, // 52주 최고가가 없는 경우 기본값 설정
+                  fiftyTwoWeekLow: quote.fiftyTwoWeekLow || 0, // 52주 최저가가 없는 경우 기본값 설정
+               }
             } catch (error) {
-               console.error(`${symbol} 시세 조회 오류:`, error)
+               console.error(`${symbol} 시세 조회 오류:`, error.message)
                return null
             }
          })
       )
 
-      const validQuotes = quotes.filter(Boolean)
+      // 유효한 데이터만 필터링 (null, undefined, 잘못된 데이터 제거)
+      const validQuotes = quotes.filter((quote) => quote && quote.price !== undefined && quote.change !== undefined && quote.changePercent !== undefined)
+
+      if (validQuotes.length === 0) {
+         return res.status(404).json({ error: '시장 데이터를 찾을 수 없습니다.' })
+      }
+
       return res.json(validQuotes)
    } catch (error) {
-      console.error('시장 개요 조회 오류:', error)
+      console.error('시장 개요 조회 오류:', error.message)
       return res.status(500).json({ error: '시장 개요 조회 중 오류가 발생했습니다.' })
    }
 })

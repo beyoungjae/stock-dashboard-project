@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { clearSearchResults, getQuote } from '../store/slices/stockSlice'
 import styled from 'styled-components'
@@ -87,11 +87,10 @@ const Home = () => {
    const [searchTerm, setSearchTerm] = useState('') // 검색어 상태
    const [loadingComplete, setLoadingComplete] = useState(false) // 로딩 완료 상태
 
+   // 컴포넌트가 마운트될 때 초기화
    useEffect(() => {
+      setSearchTerm('') // 검색어 초기화
       dispatch(clearSearchResults()) // 검색 결과 초기화
-      return () => {
-         dispatch(clearSearchResults())
-      }
    }, [dispatch])
 
    // 검색어 변경될 때 호출
@@ -100,10 +99,13 @@ const Home = () => {
    }
 
    // 주식 상세 페이지 이동
-   const handleStockClick = (symbol) => {
-      dispatch(getQuote(symbol))
-      navigate(`/stock/${symbol}`)
-   }
+   const handleStockClick = useCallback(
+      (symbol) => {
+         dispatch(getQuote(symbol))
+         navigate(`/stock/${symbol}`, { replace: true }) // replace 옵션을 사용하여 히스토리 스택을 대체
+      },
+      [dispatch, navigate]
+   )
 
    // 로딩 완료 상태 업데이트
    const handleLoadingComplete = () => {

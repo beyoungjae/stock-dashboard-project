@@ -3,7 +3,7 @@ const router = express.Router()
 const multer = require('multer')
 const path = require('path')
 const fs = require('fs')
-const { Post, User, Like, Comment } = require('../models')
+const { Post, User, Like, Comment, Activitie } = require('../models')
 const { isLoggedIn } = require('../middlewares')
 const Sequelize = require('sequelize')
 
@@ -49,6 +49,21 @@ router.post('/', isLoggedIn, upload.single('img'), async (req, res) => {
          img: req.file ? `/uploads/${req.file.filename}` : null,
          UserId: req.user.id,
       })
+
+      // 사용자 활동 통계 업데이트
+      let userActivity = await Activitie.findOne({
+         where: { UserId: req.user.id },
+      })
+
+      if (userActivity) {
+         userActivity.posts_count += 1
+         await userActivity.save()
+      } else {
+         await Activitie.create({
+            UserId: req.user.id,
+            posts_count: 1,
+         })
+      }
 
       const newPost = await Post.findOne({
          where: { id: post.id },
@@ -324,16 +339,8 @@ router.post('/:id/like', isLoggedIn, async (req, res) => {
          },
       })
 
-      // 좋아요 상태만 반환
-      const likes = await Like.findAll({
-         where: { PostId: post.id },
-         attributes: ['UserId'],
-      })
-
       res.json({
-         liked: true,
-         likes: likes.map((like) => like.UserId),
-         likeCount: likes.length,
+         userId: req.user.id, // 좋아요를 누른 사용자 ID 반환
       })
    } catch (error) {
       console.error('좋아요 오류:', error)
@@ -349,14 +356,6 @@ router.delete('/:id/like', isLoggedIn, async (req, res) => {
          return res.status(404).json({ error: '게시글을 찾을 수 없습니다.' })
       }
 
-      // 삭제 전 로그 추가
-      console.log(
-         '삭제 전 Like 테이블 확인:',
-         await Like.findAll({
-            where: { PostId: post.id, UserId: req.user.id },
-         })
-      )
-
       await Like.destroy({
          where: {
             PostId: post.id,
@@ -364,24 +363,8 @@ router.delete('/:id/like', isLoggedIn, async (req, res) => {
          },
       })
 
-      // 삭제 후 로그 추가
-      console.log(
-         '삭제 후 Like 테이블 확인:',
-         await Like.findAll({
-            where: { PostId: post.id, UserId: req.user.id },
-         })
-      )
-
-      // 좋아요 상태만 반환
-      const likes = await Like.findAll({
-         where: { PostId: post.id },
-         attributes: ['UserId'],
-      })
-
       res.json({
-         liked: false,
-         likes: likes.map((like) => like.UserId),
-         likeCount: likes.length,
+         userId: req.user.id, // 좋아요를 취소한 사용자 ID 반환
       })
    } catch (error) {
       console.error('좋아요 취소 오류:', error)

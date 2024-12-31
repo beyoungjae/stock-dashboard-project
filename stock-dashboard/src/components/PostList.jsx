@@ -393,7 +393,9 @@ const PaginationContainer = styled.div`
    gap: ${({ theme }) => theme.spacing.sm};
 `
 
-const PageButton = styled(motion.button)`
+const PageButton = styled(motion.button).attrs({
+   active: undefined,
+})`
    padding: ${({ theme }) => theme.spacing.sm};
    background: none;
    border: none;
@@ -409,7 +411,9 @@ const PageButton = styled(motion.button)`
    }
 `
 
-const PageNumber = styled(motion.button)`
+const PageNumber = styled(motion.button).withConfig({
+   shouldForwardProp: (prop) => !['active', 'isNumber'].includes(prop), // 'active'와 'isNumber' prop을 전달하지 않음
+})`
    padding: ${({ theme }) => `${theme.spacing.sm} ${theme.spacing.md}`};
    background: ${({ theme, active }) => (active ? theme.colors.primary : 'none')};
    color: ${({ theme, active }) => (active ? theme.colors.surface : theme.colors.text)};

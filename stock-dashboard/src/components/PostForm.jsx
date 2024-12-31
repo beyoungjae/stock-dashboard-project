@@ -111,7 +111,7 @@ const PostForm = ({ initialData = null }) => {
                })
             ).unwrap()
          } else {
-            await dispatch(createPost(formData)).unwrap()
+            await dispatch(createPost(postFormData)).unwrap()
          }
          navigate('/posts')
       } catch (error) {
@@ -300,7 +300,9 @@ const ErrorMessage = styled.div`
    border-radius: ${({ theme }) => theme.borderRadius.medium};
 `
 
-const SubmitButton = styled(motion.button)`
+const SubmitButton = styled(motion.button).attrs({
+   active: undefined,
+})`
    padding: ${({ theme }) => theme.spacing.md} ${({ theme }) => theme.spacing.xl};
    background: ${({ theme }) => theme.colors.primary};
    color: ${({ theme }) => theme.colors.surface};
