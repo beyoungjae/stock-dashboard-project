@@ -65,9 +65,10 @@ const PostList = ({ posts, loading, error }) => {
    }
 
    const handleMouseMove = (e, postId) => {
+      const titleRect = e.currentTarget.getBoundingClientRect() // PostTitle의 위치 정보 가져오기
       setPreviewPosition({
-         x: e.clientX + 10,
-         y: e.clientY - 10,
+         x: titleRect.left, // PostTitle의 왼쪽 위치
+         y: titleRect.bottom + 5, // PostTitle의 아래쪽 위치 + 약간의 여백
          visible: true,
          postId,
       })
@@ -129,9 +130,15 @@ const PostList = ({ posts, loading, error }) => {
       <Container>
          {currentPosts.map((post) => (
             <React.Fragment key={post.id}>
-               <PostCard to={`/post/${post.id}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -5 }} onMouseMove={(e) => handleMouseMove(e, post.id)} onMouseLeave={handleMouseLeave}>
+               <PostCard initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -5 }}>
                   <PostContent>
-                     <PostTitle>{post.title}</PostTitle>
+                     <PostTitle
+                        to={`/post/${post.id}`}
+                        onMouseMove={(e) => handleMouseMove(e, post.id)} // PostTitle에 이벤트 추가
+                        onMouseLeave={handleMouseLeave}
+                     >
+                        {post.title}
+                     </PostTitle>
                      <PostMeta>
                         <Author>{post.User?.username}</Author>
                         <Separator>•</Separator>
@@ -153,26 +160,28 @@ const PostList = ({ posts, loading, error }) => {
                         </StatItem>
                         {user?.id === post.UserId && (
                            <>
-                              <StatItem>
+                              <StatItemLinks>
                                  <StatIcon>
                                     <EditIcon
+                                       sx={{ ':hover': { color: 'primary.main' } }}
                                        onClick={(e) => {
                                           e.preventDefault()
                                           handleEdit(post.id)
                                        }}
                                     />
                                  </StatIcon>
-                              </StatItem>
-                              <StatItem>
+                              </StatItemLinks>
+                              <StatItemLinks>
                                  <StatIcon>
                                     <DeleteIcon
+                                       sx={{ ':hover': { color: 'error.main' } }}
                                        onClick={(e) => {
                                           e.preventDefault()
                                           handleDelete(post.id)
                                        }}
                                     />
                                  </StatIcon>
-                              </StatItem>
+                              </StatItemLinks>
                            </>
                         )}
                      </PostStats>
@@ -243,7 +252,7 @@ const PreviewContent = styled.p`
    -webkit-box-orient: vertical;
 `
 
-const PostCard = styled(motion(Link))`
+const PostCard = styled(motion.div)`
    position: relative;
    display: flex;
    flex-direction: column;
@@ -271,7 +280,7 @@ const PostContent = styled.div`
    flex-direction: column;
 `
 
-const PostTitle = styled.h3`
+const PostTitle = styled(motion(Link))`
    font-size: ${({ theme }) => theme.typography.fontSizes.lg};
    font-weight: ${({ theme }) => theme.typography.fontWeights.bold};
    color: ${({ theme }) => theme.colors.text};
@@ -313,6 +322,12 @@ const PostStats = styled.div`
 `
 
 const StatItem = styled.div`
+   display: flex;
+   align-items: center;
+   gap: ${({ theme }) => theme.spacing.xs};
+`
+
+const StatItemLinks = styled(motion(Link))`
    display: flex;
    align-items: center;
    gap: ${({ theme }) => theme.spacing.xs};
