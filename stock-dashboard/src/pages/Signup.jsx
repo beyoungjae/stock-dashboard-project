@@ -24,6 +24,27 @@ const Signup = () => {
          ...prev,
          [name]: value,
       }))
+
+      // 이메일 필드가 변경될 때마다 유효성 검사
+      if (name === 'email' && value && !isValidEmail(value)) {
+         setError('올바른 이메일 형식이 아닙니다.')
+      } else {
+         setError(null)
+      }
+
+      // 비밀번호 확인 필드가 채워졌을 때 유효성 검사
+      if (name === 'confirmPassword' && value && value !== formData.password) {
+         setError('비밀번호가 일치하지 않습니다.')
+      } else {
+         setError(null)
+      }
+   }
+
+   // 이메일 유효성 검사 함수 추가
+   const isValidEmail = (email) => {
+      // 이메일 정규식 패턴
+      const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/
+      return emailPattern.test(email)
    }
 
    // 회원가입 전송
@@ -32,12 +53,21 @@ const Signup = () => {
       setError(null)
       setIsLoading(true)
 
+      // 기본 필드 검사
       if (!formData.email || !formData.password || !formData.nickname) {
          setError('모든 필드를 입력해주세요.')
          setIsLoading(false)
          return
       }
 
+      // 이메일 유효성 검사 추가
+      if (!isValidEmail(formData.email)) {
+         setError('올바른 이메일 형식이 아닙니다.')
+         setIsLoading(false)
+         return
+      }
+
+      // 비밀번호 확인 검사
       if (formData.password !== formData.confirmPassword) {
          setError('비밀번호가 일치하지 않습니다.')
          setIsLoading(false)
@@ -51,7 +81,6 @@ const Signup = () => {
                password: formData.password,
                nickname: formData.nickname,
             })
-            // 전송 후 로그인 페이지 이동 후 새로고침
          ).unwrap()
          navigate('/login')
          window.location.reload()

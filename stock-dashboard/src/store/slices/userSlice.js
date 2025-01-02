@@ -58,10 +58,15 @@ const userSlice = createSlice({
    name: 'user',
    initialState: {
       activity: null,
+      activityFilter: null,
       loading: false,
       error: null,
    },
-   reducers: {},
+   reducers: {
+      setActivityFilter: (state, action) => {
+         state.activityFilter = action.payload
+      },
+   },
    extraReducers: (builder) => {
       builder
          .addCase(getUserActivityThunk.pending, (state) => {
@@ -81,4 +86,5 @@ const userSlice = createSlice({
    },
 })
 
+export const { setActivityFilter } = userSlice.actions
 export default userSlice.reducer

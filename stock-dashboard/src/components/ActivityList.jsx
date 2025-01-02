@@ -6,7 +6,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { ko } from 'date-fns/locale'
 
 const ActivityList = () => {
-   const { activity } = useSelector((state) => state.user)
+   const { activity, activityFilter } = useSelector((state) => state.user)
 
    const formatDate = (dateString) => {
       if (!dateString) return '날짜 없음'
@@ -22,6 +22,18 @@ const ActivityList = () => {
       }
    }
 
+   const filterActivities = (activities) => {
+      if (!activityFilter) return activities
+
+      const filterMap = {
+         posts: 'POST_WRITE',
+         comments: 'COMMENT_WRITE',
+         likes: 'POST_LIKE',
+      }
+
+      return activities.filter((item) => item.type === filterMap[activityFilter])
+   }
+
    if (!activity?.recentActivities?.length) {
       return (
          <EmptyContainer initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
@@ -31,9 +43,20 @@ const ActivityList = () => {
       )
    }
 
+   const filteredActivities = filterActivities(activity.recentActivities)
+
+   if (filteredActivities.length === 0) {
+      return (
+         <EmptyContainer initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+            <EmptyIcon>🔍</EmptyIcon>
+            <EmptyMessage>해당하는 활동 내역이 없습니다.</EmptyMessage>
+         </EmptyContainer>
+      )
+   }
+
    return (
       <Container>
-         {activity.recentActivities.map((item, index) => (
+         {filteredActivities.map((item, index) => (
             <ActivityItem key={`${item.type}-${item.id}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: index * 0.1 }}>
                <ActivityIcon>
                   {item.type === 'POST_WRITE' && '📝'}
@@ -42,9 +65,9 @@ const ActivityList = () => {
                </ActivityIcon>
                <ActivityContent>
                   <ActivityTitle>
-                     {item.type === 'POST_WRITE' && <Link to={`/post/${item.id}`}>{item.title}</Link>}
-                     {item.type === 'COMMENT_WRITE' && <>{item.postTitle}에 댓글 작성</>}
-                     {item.type === 'POST_LIKE' && <>{item.postTitle}에 좋아요</>}
+                     {item.type === 'POST_WRITE' && <Link to={`/post/${item.id}`}>{item.title || '삭제된 게시글'}</Link>}
+                     {item.type === 'COMMENT_WRITE' && <Link to={`/post/${item.postId}`}>{item.postTitle || '삭제된 '}게시글에 댓글 작성</Link>}
+                     {item.type === 'POST_LIKE' && <>{item.postTitle || '삭제된 '}게시글에 좋아요</>}
                   </ActivityTitle>
                   <ActivityTime>{formatDate(item.createdAt)}</ActivityTime>
                </ActivityContent>

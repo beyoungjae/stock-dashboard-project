@@ -132,12 +132,16 @@ const PostList = ({ posts, loading, error }) => {
             <React.Fragment key={post.id}>
                <PostCard initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -5 }}>
                   <PostContent>
-                     <PostTitle
-                        to={`/post/${post.id}`}
-                        onMouseMove={(e) => handleMouseMove(e, post.id)} // PostTitle에 이벤트 추가
-                        onMouseLeave={handleMouseLeave}
-                     >
-                        {post.title}
+                     <PostTitle>
+                        {post.title && (
+                           <Link
+                              to={`/post/${post.id}`}
+                              onMouseMove={(e) => handleMouseMove(e, post.id)} // PostTitle에 이벤트 추가
+                              onMouseLeave={handleMouseLeave}
+                           >
+                              {post.title}
+                           </Link>
+                        )}
                      </PostTitle>
                      <PostMeta>
                         <Author>{post.User?.username}</Author>
@@ -280,7 +284,7 @@ const PostContent = styled.div`
    flex-direction: column;
 `
 
-const PostTitle = styled(motion(Link))`
+const PostTitle = styled.div`
    font-size: ${({ theme }) => theme.typography.fontSizes.lg};
    font-weight: ${({ theme }) => theme.typography.fontWeights.bold};
    color: ${({ theme }) => theme.colors.text};
@@ -290,6 +294,14 @@ const PostTitle = styled(motion(Link))`
    display: -webkit-box;
    -webkit-line-clamp: 2;
    -webkit-box-orient: vertical;
+
+   a {
+      color: ${({ theme }) => theme.colors.text};
+      text-decoration: none;
+      &:hover {
+         color: ${({ theme }) => theme.colors.primary};
+      }
+   }
 `
 
 const PostMeta = styled.div`
