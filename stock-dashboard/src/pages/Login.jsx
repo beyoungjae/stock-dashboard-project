@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import styled from 'styled-components'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
@@ -25,21 +25,24 @@ const Login = () => {
    }
 
    // 로그인 시도 시 호출
-   const handleSubmit = async (e) => {
-      e.preventDefault()
-      setError(null)
-      setIsLoading(true)
+   const handleSubmit = useCallback(
+      async (e) => {
+         e.preventDefault()
+         setError(null)
+         setIsLoading(true)
 
-      try {
-         await dispatch(loginUserThunk(formData)).unwrap() // 로그인 요청
-         navigate('/') // 홈 페이지로 이동
-      } catch (error) {
-         setError(error.message || '로그인에 실패했습니다.') // 에러 메시지 설정
-         console.error('로그인 실패:', error)
-      } finally {
-         setIsLoading(false) // 로딩 상태 초기화
-      }
-   }
+         try {
+            await dispatch(loginUserThunk(formData)).unwrap() // 로그인 요청
+            navigate('/') // 홈 페이지로 이동
+         } catch (error) {
+            setError(error.message || '로그인에 실패했습니다.') // 에러 메시지 설정
+            console.error('로그인 실패:', error)
+         } finally {
+            setIsLoading(false) // 로딩 상태 초기화
+         }
+      },
+      [formData, dispatch, navigate]
+   )
 
    return (
       <LoginContainer>

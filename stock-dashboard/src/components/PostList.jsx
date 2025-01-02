@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -84,20 +84,26 @@ const PostList = ({ posts, loading, error }) => {
       }
    }, [dispatch, id])
 
-   const handleDelete = async (postId) => {
-      if (window.confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
-         try {
-            await dispatch(deletePost(postId)).unwrap()
-            navigate('/posts')
-         } catch (error) {
-            console.error('게시글 삭제 실패:', error)
+   const handleDelete = useCallback(
+      async (postId) => {
+         if (window.confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
+            try {
+               await dispatch(deletePost(postId)).unwrap()
+               navigate('/posts')
+            } catch (error) {
+               console.error('게시글 삭제 실패:', error)
+            }
          }
-      }
-   }
+      },
+      [dispatch, navigate]
+   )
 
-   const handleEdit = (postId) => {
-      navigate(`/post/edit/${postId}`)
-   }
+   const handleEdit = useCallback(
+      (postId) => {
+         navigate(`/post/edit/${postId}`)
+      },
+      [navigate]
+   )
 
    if (loading) {
       return (

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import { useDispatch } from 'react-redux'
 import styled from 'styled-components'
 import { searchStocks } from '../store/slices/stockSlice'
@@ -17,9 +17,9 @@ const SearchBar = () => {
    }
 
    // 검색 값 변경
-   const handleChange = (e) => {
+   const handleChange = useCallback((e) => {
       setQuery(e.target.value)
-   }
+   }, [])
 
    return (
       <SearchForm onSubmit={handleSearch}>

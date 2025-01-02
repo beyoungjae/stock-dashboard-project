@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import styled from 'styled-components'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
@@ -11,10 +11,10 @@ const StockItem = ({ stock }) => {
    const { symbol, name, exchange } = stock
 
    // 주식 상세 페이지 이동
-   const handleClick = () => {
+   const handleClick = useCallback(() => {
       dispatch(getQuote(symbol))
       navigate(`/stock/${symbol}`)
-   }
+   }, [dispatch, navigate, symbol])
 
    return (
       <ItemCard onClick={handleClick} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -4, boxShadow: (theme) => theme.shadows.glow }} transition={{ duration: 0.2 }}>

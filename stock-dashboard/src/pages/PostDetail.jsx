@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import styled from 'styled-components'
@@ -24,7 +24,7 @@ const PostDetail = () => {
    }, [dispatch, id])
 
    // 게시글 삭제 함수
-   const handleDelete = async () => {
+   const handleDelete = useCallback(async () => {
       if (window.confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
          try {
             await dispatch(deletePost(id)).unwrap()
@@ -33,7 +33,7 @@ const PostDetail = () => {
             console.error('게시글 삭제 실패:', error)
          }
       }
-   }
+   }, [dispatch, navigate, id])
 
    // 좋아요 처리, 좋아요가 있는지 확인하고 좋아요 또는 좋아요 취소
    const handleLike = async () => {
