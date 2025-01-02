@@ -2,6 +2,9 @@ const express = require('express')
 const router = express.Router()
 const yahooFinance = require('yahoo-finance2').default
 
+// 콘솔 로그에 yahoo-finance2 라이브러리 설문 조사 출력 제거
+yahooFinance.suppressNotices(['yahooSurvey'])
+
 // 차트 데이터 캐시
 const chartCache = new Map()
 const CACHE_DURATION = 5 * 60 * 1000 // 5분
@@ -10,7 +13,7 @@ const CACHE_DURATION = 5 * 60 * 1000 // 5분
 const yahooFinanceOptions = {
    queue: {
       concurrent: 1, // 동시 요청 수 (1로 제한)
-      interval: 5000, // 요청 간격 (5000ms = 5초)
+      timeout: 30000, // 요청 간격 (30000ms = 30초)
       intervalCap: 1, // 요청 제한 (1로 제한)
    },
    fetchOptions: {
@@ -26,9 +29,9 @@ const yahooFinanceOptions = {
 
          windows chrome (winodws용)
          Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36
-         Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)' + ' Chrome/95.0.4638.69 Safari/537.36
+         Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36
          */
-         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:89.0) Gecko/20100101 Firefox/89.0',
+         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36',
          'Accept-Language': 'en-US,en;q=0.9', // 언어 설정
          Accept: 'application/json,text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', // Accept: 서버가 반환할 수 있는 콘텐츠 타입 지정
          'Accept-Encoding': 'gzip, deflate, br', // 클라이언트가 이해할 수 있는 압축 방식 지정
@@ -42,19 +45,23 @@ const yahooFinanceOptions = {
 // 시장 개장시간 체크
 const isMarketOpen = (symbol) => {
    const now = new Date()
-   const day = now.getDay()
-
-   if (day === 0 || day === 6) return false
+   const options = { timeZone: 'Asia/Seoul', hour12: false }
+   const korTime = new Date(now.toLocaleString('en-US', options))
+   const day = korTime.getDay()
+   const hour = korTime.getHours()
+   const minute = korTime.getMinutes()
 
    if (symbol.endsWith('.KS')) {
-      const korTime = new Date(now.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }))
-      const hour = korTime.getHours()
-      return hour >= 9 && hour < 15.5
+      // 한국 시장은 평일 오전 9시부터 오후 3시 30분까지 개장
+      return day >= 1 && day <= 5 && ((hour === 9 && minute >= 0) || (hour > 9 && hour < 15) || (hour === 15 && minute < 30))
+   } else {
+      // 미국 시장은 평일 오전 9시 30분부터 오후 4시까지 개장
+      const nyTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York', hour12: false }))
+      const nyDay = nyTime.getDay()
+      const nyHour = nyTime.getHours()
+      const nyMinute = nyTime.getMinutes()
+      return nyDay >= 1 && nyDay <= 5 && ((nyHour === 9 && nyMinute >= 30) || (nyHour > 9 && nyHour < 16) || (nyHour === 16 && nyMinute === 0))
    }
-
-   const nyTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }))
-   const hour = nyTime.getHours()
-   return hour >= 9.5 && hour < 16
 }
 
 // 데이터 포맷팅
@@ -80,40 +87,36 @@ const getDateRange = (range, symbol) => {
 
    switch (range) {
       case '1d':
-         start = new Date(end)
-         start.setHours(0, 0, 0, 0)
-         // 시장이 닫혀 있으면 전날 데이터 포함
-         if (!isMarketOpen(symbol)) {
-            start.setDate(start.getDate() - 1)
-         }
+         start.setDate(end.getDate() - 2) // 여유 데이터 포함
          break
       case '5d':
-         start.setDate(end.getDate() - 5)
+         start.setDate(end.getDate() - 7) // 주말 고려
          break
       case '1mo':
-         start.setMonth(end.getMonth() - 1)
+         start.setMonth(end.getMonth() - 2) // 여유 기간 포함
          break
-      default:
-         start.setDate(end.getDate() - 1)
    }
 
    return {
-      period1: start,
-      period2: end,
+      period1: Math.floor(start.getTime() / 1000),
+      period2: Math.floor(end.getTime() / 1000),
    }
 }
 
-// Yahoo Finance 인터벌 변환
-const convertInterval = (interval, range) => {
-   // 범위에 따른 인터벌 조정
-   if (range === '1d') {
-      return '5m'
-   } else if (range === '5d') {
-      return '15m'
-   } else if (range === '1mo') {
-      return '1d'
+// 개장시간 확인 간격 설정
+const getIntervalForRange = (range, symbol) => {
+   const marketOpen = isMarketOpen(symbol)
+
+   switch (range) {
+      case '1d':
+         return marketOpen ? '5m' : '15m'
+      case '5d':
+         return '15m' // 항상 15분 간격 유지
+      case '1mo':
+         return '1d' // 일간 데이터
+      default:
+         return '1d'
    }
-   return interval
 }
 
 // 초기 시세 조회 엔드포인트
@@ -246,39 +249,25 @@ router.get('/chart/:symbol', async (req, res) => {
          return res.status(400).json({ error: '종목 심볼이 필요합니다.' })
       }
 
-      console.log('차트 데이터 요청:', { symbol, range, interval })
-
-      // 캐시 확인
       const cacheKey = `${symbol}-${range}-${interval}`
       const cachedData = chartCache.get(cacheKey)
       if (cachedData && Date.now() - cachedData.timestamp < CACHE_DURATION) {
-         console.log('캐시된 데이터 반환:', symbol)
          return res.json(cachedData.data)
       }
 
-      // 날짜 범위 계산 (시장 상태에 따라 이전 날짜 포함)
       const { period1, period2 } = getDateRange(range, symbol)
+      const adjustedInterval = getIntervalForRange(range, symbol)
 
-      // Yahoo Finance API 옵션 설정
       const queryOptions = {
-         ...yahooFinanceOptions,
          period1,
          period2,
-         interval: convertInterval(interval, range),
-         includePrePost: true, // 장전/장후 데이터 포함
+         interval: adjustedInterval,
+         includePrePost: true,
          events: 'div,splits',
       }
 
-      console.log('Yahoo Finance API 요청:', {
-         symbol,
-         period1: period1.toISOString(),
-         period2: period2.toISOString(),
-         interval: queryOptions.interval,
-      })
-
-      // API 호출 재시도 로직
       let retryCount = 0
-      let result
+      let result = null
       while (retryCount < 3) {
          try {
             result = await yahooFinance.chart(symbol, queryOptions)
@@ -287,25 +276,12 @@ router.get('/chart/:symbol', async (req, res) => {
             }
             throw new Error('데이터가 비어있습니다.')
          } catch (error) {
-            console.error(`재시도 ${retryCount + 1}/3:`, error.message)
             retryCount++
             if (retryCount === 3) throw error
-            await new Promise((resolve) => setTimeout(resolve, 3000 * retryCount))
+            await new Promise((resolve) => setTimeout(resolve, 2000))
          }
       }
 
-      console.log('Yahoo Finance API 응답:', {
-         symbol,
-         quotesLength: result?.quotes?.length,
-         error: result?.error,
-      })
-
-      if (!result || !result.quotes || result.quotes.length === 0) {
-         console.error('빈 데이터 응답:', { symbol, result })
-         return res.status(404).json({ error: '차트 데이터를 찾을 수 없습니다.' })
-      }
-
-      // 데이터 포맷팅
       const chartData = result.quotes
          .map((quote) => {
             if (!quote.date) return null
@@ -331,30 +307,25 @@ router.get('/chart/:symbol', async (req, res) => {
          })
          .filter(Boolean)
 
-      if (chartData.length === 0) {
-         console.error('유효한 데이터 없음:', { symbol, originalLength: result.quotes.length })
-         return res.status(404).json({ error: '유효한 차트 데이터가 없습니다.' })
+      const validateChartData = (data, range) => {
+         const minimumDataPoints = {
+            '1d': 78,
+            '5d': 130,
+            '1mo': 20,
+         }
+
+         return data.length >= minimumDataPoints[range]
       }
 
-      // 캐시 저장
-      chartCache.set(cacheKey, {
-         timestamp: Date.now(),
-         data: chartData,
-      })
+      if (validateChartData(chartData, range)) {
+         chartCache.set(cacheKey, {
+            timestamp: Date.now(),
+            data: chartData,
+         })
+      }
 
-      console.log('차트 데이터 반환:', { symbol, dataLength: chartData.length })
       return res.json(chartData)
    } catch (error) {
-      console.error('차트 데이터 조회 오류:', {
-         symbol: req.params.symbol,
-         error: error.message,
-         stack: error.stack,
-      })
-
-      if (error.name === 'HTTPError' && error.response?.statusCode === 404) {
-         return res.status(404).json({ error: '차트 데이터를 찾을 수 없습니다.' })
-      }
-
       return res.status(500).json({
          error: '차트 데이터 조회 중 오류가 발생했습니다.',
          details: error.message,
