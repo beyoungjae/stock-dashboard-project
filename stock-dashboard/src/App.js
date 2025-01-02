@@ -15,6 +15,7 @@ import MyDashboard from './pages/MyDashboard'
 import MarketPage from './pages/MarketPage'
 import NotFound from './pages/NotFound'
 import StockDetail from './pages/StockDetail'
+import UserDashboard from './pages/UserDashboard'
 import GlobalStyles from './styles/GlobalStyles'
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
             <Route path="/popular" element={<PopularPosts />} />
             <Route path="/market-overview" element={<MarketPage />} />
             <Route path="/mypage" element={<MyDashboard />} />
+            <Route path="/dashboard/:userId" element={<UserDashboard />} />
             <Route path="/404" element={<NotFound />} />
             <Route path="*" element={<Navigate to="/404" replace />} />
          </Routes>

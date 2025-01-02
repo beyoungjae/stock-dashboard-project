@@ -138,7 +138,7 @@ router.get('/:userId/activity', async (req, res) => {
       }
 
       // 각 활동 데이터 조회
-      const [posts, likes, comments] = await Promise.all([Post.count({ where: { UserId: userId } }), Like.count({ where: { UserId: userId } }), Comment.count({ where: { UserId: userId } })])
+      const [users, posts, likes, comments] = await Promise.all([User.findOne({ where: { id: userId }, attributes: { exclude: ['email', 'password'] } }), Post.count({ where: { UserId: userId } }), Like.count({ where: { UserId: userId } }), Comment.count({ where: { UserId: userId } })])
 
       // 최근 활동 조회
       const recentActivities = await Promise.all([
@@ -205,6 +205,7 @@ router.get('/:userId/activity', async (req, res) => {
 
       // 응답 데이터 구성
       const responseData = {
+         User: users,
          posts_count: posts,
          likes_count: likes,
          comments_count: comments,

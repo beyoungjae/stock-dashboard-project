@@ -150,7 +150,9 @@ const PostList = ({ posts, loading, error }) => {
                         )}
                      </PostTitle>
                      <PostMeta>
-                        <Author>{post.User?.username}</Author>
+                        <Author as={Link} to={post.UserId === user?.id ? `/mypage` : `/dashboard/${post.UserId}`} onClick={(e) => e.stopPropagation()}>
+                           {post.User?.username}
+                        </Author>
                         <Separator>•</Separator>
                         <PostDate>
                            {formatDistanceToNow(new Date(post.createdAt), {
@@ -317,9 +319,15 @@ const PostMeta = styled.div`
    margin-bottom: ${({ theme }) => theme.spacing.md};
 `
 
-const Author = styled.span`
+const Author = styled(motion.span)`
    font-size: ${({ theme }) => theme.typography.fontSizes.sm};
    color: ${({ theme }) => theme.colors.primary};
+   cursor: pointer;
+   text-decoration: none;
+
+   &:hover {
+      text-decoration: underline;
+   }
 `
 
 const Separator = styled.span`

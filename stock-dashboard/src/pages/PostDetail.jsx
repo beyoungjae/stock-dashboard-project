@@ -93,7 +93,9 @@ const PostDetail = () => {
             <Header>
                <Title>{post.title}</Title>
                <MetaInfo>
-                  <Author>{post.User?.username}</Author>
+                  <Author as={Link} to={post.UserId === user?.id ? `/mypage` : `/dashboard/${post.UserId}`} onClick={(e) => e.stopPropagation()}>
+                     {post.User?.username}
+                  </Author>
                   <Separator>•</Separator>
                   <PostDate>
                      {/* 게시글 작성 일자 계산 */}
@@ -168,9 +170,15 @@ const MetaInfo = styled.div`
    gap: ${({ theme }) => theme.spacing.xs};
 `
 
-const Author = styled.span`
-   font-size: ${({ theme }) => theme.typography.fontSizes.md};
+const Author = styled(motion.span)`
+   font-size: ${({ theme }) => theme.typography.fontSizes.sm};
    color: ${({ theme }) => theme.colors.primary};
+   cursor: pointer;
+   text-decoration: none;
+
+   &:hover {
+      text-decoration: underline;
+   }
 `
 
 const Separator = styled.span`

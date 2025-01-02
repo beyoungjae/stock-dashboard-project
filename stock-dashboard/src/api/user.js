@@ -54,6 +54,7 @@ export const getUserActivity = async (userId) => {
 
       // 응답 데이터 구조화
       const activityData = {
+         User: response.data.User,
          posts_count: response.data.posts_count || 0,
          likes_count: response.data.likes_count || 0,
          comments_count: response.data.comments_count || 0,

@@ -41,6 +41,7 @@ export const getUserActivityThunk = createAsyncThunk('user/getUserActivity', asy
 
       // 데이터 구조 확인
       const activityData = {
+         User: response.User,
          posts_count: response.posts_count,
          likes_count: response.likes_count,
          comments_count: response.comments_count,
