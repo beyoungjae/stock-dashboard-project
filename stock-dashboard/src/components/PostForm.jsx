@@ -99,8 +99,13 @@ const PostForm = ({ initialData = null }) => {
          const postFormData = new FormData()
          postFormData.append('title', formData.title)
          postFormData.append('content', formData.content)
-         if (formData.img instanceof File) {
-            postFormData.append('img', formData.img)
+
+         // 이미지 파일이 있는 경우, 파일 이름을 인코딩하여 FormData에 추가
+         if (formData.img) {
+            const encodedFile = new File([formData.img], encodeURIComponent(formData.img.name), {
+               type: formData.img.type,
+            })
+            postFormData.append('img', encodedFile)
          }
 
          if (initialData) {
@@ -122,28 +127,28 @@ const PostForm = ({ initialData = null }) => {
    }
 
    return (
-      <Form onSubmit={handleSubmit}>
-         <FormGroup>
+      <Form onSubmit={handleSubmit} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+         <FormGroup initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
             <Label htmlFor="title">제목</Label>
-            <Input type="text" id="title" name="title" value={formData.title} onChange={handleChange} placeholder="제목을 입력하세요" disabled={isSubmitting} />
+            <Input type="text" id="title" name="title" value={formData.title} onChange={handleChange} placeholder="제목을 입력하세요" disabled={isSubmitting} whileFocus={{ scale: 1.01 }} />
          </FormGroup>
 
-         <FormGroup>
+         <FormGroup initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
             <Label htmlFor="content">내용</Label>
-            <TextArea id="content" name="content" value={formData.content} onChange={handleChange} placeholder="내용을 입력하세요" disabled={isSubmitting} rows={10} />
+            <TextArea id="content" name="content" value={formData.content} onChange={handleChange} placeholder="내용을 입력하세요" disabled={isSubmitting} rows={10} whileFocus={{ scale: 1.01 }} />
          </FormGroup>
 
-         <FormGroup>
+         <FormGroup initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
             <Label htmlFor="img">이미지</Label>
             <ImageUploadContainer>
-               <ImageUploadButton type="button" onClick={() => fileInputRef.current?.click()} disabled={isSubmitting}>
+               <ImageUploadButton type="button" onClick={() => fileInputRef.current?.click()} disabled={isSubmitting} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   이미지 선택
                </ImageUploadButton>
                <ImageInput ref={fileInputRef} type="file" id="img" name="img" accept="image/*" onChange={handleImageChange} disabled={isSubmitting} />
                {previewImage && (
-                  <PreviewContainer>
+                  <PreviewContainer initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 20 }}>
                      <PreviewImage src={previewImage} alt="미리보기" />
-                     <RemoveImageButton type="button" onClick={handleImageRemove}>
+                     <RemoveImageButton type="button" onClick={handleImageRemove} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                         ✕
                      </RemoveImageButton>
                   </PreviewContainer>
@@ -151,24 +156,33 @@ const PostForm = ({ initialData = null }) => {
             </ImageUploadContainer>
          </FormGroup>
 
-         {error && <ErrorMessage>{error}</ErrorMessage>}
+         {error && (
+            <ErrorMessage initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+               {error}
+            </ErrorMessage>
+         )}
 
-         <SubmitButton type="submit" disabled={isSubmitting} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+         <SubmitButton type="submit" disabled={isSubmitting} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
             {isSubmitting ? '저장 중...' : initialData ? '수정하기' : '작성하기'}
          </SubmitButton>
       </Form>
    )
 }
 
-const Form = styled.form`
+const Form = styled(motion.form)`
    display: flex;
    flex-direction: column;
    gap: ${({ theme }) => theme.spacing.lg};
    max-width: 800px;
    margin: 0 auto;
+   padding: ${({ theme }) => theme.spacing.xl};
+   background: ${({ theme }) => theme.colors.surface};
+   border-radius: ${({ theme }) => theme.borderRadius.large};
+   box-shadow: ${({ theme }) => theme.shadows.medium};
+   backdrop-filter: blur(10px);
 `
 
-const FormGroup = styled.div`
+const FormGroup = styled(motion.div)`
    display: flex;
    flex-direction: column;
    gap: ${({ theme }) => theme.spacing.sm};
@@ -176,23 +190,23 @@ const FormGroup = styled.div`
 
 const Label = styled.label`
    font-size: ${({ theme }) => theme.typography.fontSizes.md};
-   color: ${({ theme }) => theme.colors.text};
+   color: ${({ theme }) => theme.colors.textSecondary};
    font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
 `
 
-const Input = styled.input`
+const Input = styled(motion.input)`
    padding: ${({ theme }) => theme.spacing.md};
    font-size: ${({ theme }) => theme.typography.fontSizes.md};
-   border: 1px solid ${({ theme }) => theme.colors.border};
+   border: 2px solid ${({ theme }) => theme.colors.border};
    border-radius: ${({ theme }) => theme.borderRadius.medium};
-   background: ${({ theme }) => theme.colors.surface};
+   background: ${({ theme }) => theme.colors.background};
    color: ${({ theme }) => theme.colors.text};
-   transition: ${({ theme }) => theme.transitions.quick};
+   transition: all 0.3s ease;
 
    &:focus {
       outline: none;
       border-color: ${({ theme }) => theme.colors.primary};
-      box-shadow: ${({ theme }) => theme.shadows.glow};
+      box-shadow: 0 0 0 3px ${({ theme }) => `${theme.colors.primary}30`};
    }
 
    &:disabled {
@@ -201,26 +215,21 @@ const Input = styled.input`
    }
 `
 
-const TextArea = styled.textarea`
+const TextArea = styled(motion.textarea)`
    padding: ${({ theme }) => theme.spacing.md};
    font-size: ${({ theme }) => theme.typography.fontSizes.md};
-   border: 1px solid ${({ theme }) => theme.colors.border};
+   border: 2px solid ${({ theme }) => theme.colors.border};
    border-radius: ${({ theme }) => theme.borderRadius.medium};
-   background: ${({ theme }) => theme.colors.surface};
+   background: ${({ theme }) => theme.colors.background};
    color: ${({ theme }) => theme.colors.text};
    resize: vertical;
    min-height: 200px;
-   transition: ${({ theme }) => theme.transitions.quick};
+   transition: all 0.3s ease;
 
    &:focus {
       outline: none;
       border-color: ${({ theme }) => theme.colors.primary};
-      box-shadow: ${({ theme }) => theme.shadows.glow};
-   }
-
-   &:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
+      box-shadow: 0 0 0 3px ${({ theme }) => `${theme.colors.primary}30`};
    }
 `
 
@@ -230,7 +239,7 @@ const ImageUploadContainer = styled.div`
    gap: ${({ theme }) => theme.spacing.md};
 `
 
-const ImageUploadButton = styled.button`
+const ImageUploadButton = styled(motion.button)`
    padding: ${({ theme }) => theme.spacing.md};
    font-size: ${({ theme }) => theme.typography.fontSizes.md};
    color: ${({ theme }) => theme.colors.text};
@@ -269,7 +278,7 @@ const PreviewImage = styled.img`
    border: 1px solid ${({ theme }) => theme.colors.border};
 `
 
-const RemoveImageButton = styled.button`
+const RemoveImageButton = styled(motion.button)`
    position: absolute;
    top: ${({ theme }) => theme.spacing.xs};
    right: ${({ theme }) => theme.spacing.xs};
@@ -291,7 +300,7 @@ const RemoveImageButton = styled.button`
    }
 `
 
-const ErrorMessage = styled.div`
+const ErrorMessage = styled(motion.div)`
    color: ${({ theme }) => theme.colors.error};
    font-size: ${({ theme }) => theme.typography.fontSizes.md};
    text-align: center;

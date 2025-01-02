@@ -7,6 +7,8 @@ import FlipNumbers from 'react-flip-numbers'
 import { selectCurrentStock, selectStatus, selectErrors, getQuote, selectConnectionStatus, subscribeToQuote, setConnectionStatus } from '../store/slices/stockSlice'
 import StockChart from '../components/StockChart'
 
+import RefreshIcon from '@mui/icons-material/Refresh'
+
 const StockDetail = () => {
    const { symbol } = useParams()
    const dispatch = useDispatch()
@@ -134,91 +136,87 @@ const StockDetail = () => {
    const displayMarketCap = currentStock.marketCap ? formatMarketCap(currentStock.marketCap, isKoreanStock) : '정보 없음'
 
    return (
-      <DetailContainer initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-         <ConnectionStatus $isConnected={isConnected}>{isConnected ? '연결됨' : '연결 끊김'}</ConnectionStatus>
-         <MarketStatusBadge $status={marketStatus}>{marketStatus === 'OPEN' ? '거래중' : marketStatus === 'CLOSED' ? '장 마감' : '로딩중'}</MarketStatusBadge>
-         <SymbolName>{currentStock.name}</SymbolName>
-         <StockChart symbol={symbol} />
-         <Header>
-            <MainInfo>
-               <SymbolSection>
-                  <Symbol>{symbol}</Symbol>
-                  <Exchange>{currentStock.exchange}</Exchange>
-               </SymbolSection>
-               <CompanyName>{currentStock.name}</CompanyName>
-            </MainInfo>
-            <PriceInfo>
-               <Price>
-                  {!isKoreanStock && <span className="currency">$</span>}
-                  <NumberGroup>
-                     {formatNumber(formattedPrice)
-                        .split('')
-                        .map((char, index) => (
-                           <React.Fragment key={index}>{char === ',' ? <NumberSeparator>,</NumberSeparator> : <FlipNumbers height={48} width={32} color="white" background="transparent" play perspective={1000} duration={0.5} numbers={char} />}</React.Fragment>
-                        ))}
-                  </NumberGroup>
-                  {isKoreanStock && <span className="unit">원</span>}
-               </Price>
-               <Change $isPositive={isPositive}>
-                  <span>
-                     {currentStock.change >= 0 ? '+' : '-'}
-                     {!isKoreanStock && '$'}
+      <DetailContainer initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+         <MainContent>
+            <Header initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+               <MainInfo>
+                  <SymbolSection>
+                     <Symbol>{symbol}</Symbol>
+                     <Exchange>{currentStock?.exchange}</Exchange>
+                     <ConnectionStatus $isConnected={isConnected}>{isConnected ? '연결됨' : '연결 끊김'}</ConnectionStatus>
+                     <MarketStatusBadge $status={marketStatus}>{marketStatus === 'OPEN' ? '거래중' : marketStatus === 'CLOSED' ? '장 마감' : '로딩중'}</MarketStatusBadge>
+                  </SymbolSection>
+                  <CompanyName>{currentStock?.name}</CompanyName>
+               </MainInfo>
+
+               <PriceInfo>
+                  <Price>
+                     {!isKoreanStock && <span className="currency">$</span>}
                      <NumberGroup>
-                        {formatNumber(formattedChange)
+                        {formatNumber(formattedPrice)
                            .split('')
                            .map((char, index) => (
-                              <React.Fragment key={index}>
-                                 {char === ',' ? <NumberSeparator2 $isPositive={isPositive}>,</NumberSeparator2> : <FlipNumbers height={24} width={20} color={isPositive ? '#4eaf0a' : '#e01e1e'} background="transparent" play perspective={1000} duration={0.5} numbers={char} />}
-                              </React.Fragment>
+                              <React.Fragment key={index}>{char === ',' ? <NumberSeparator>,</NumberSeparator> : <FlipNumbers height={48} width={32} color="white" background="transparent" play perspective={1000} duration={0.5} numbers={char} />}</React.Fragment>
                            ))}
                      </NumberGroup>
                      {isKoreanStock && <span className="unit">원</span>}
-                  </span>
-                  <span className="percent">
-                     ({currentStock.changePercent >= 0 ? '+' : '-'}
-                     {Math.abs(changePercent)}%)
-                  </span>
-               </Change>
-            </PriceInfo>
-         </Header>
+                  </Price>
+                  <Change $isPositive={isPositive}>
+                     <span>
+                        {currentStock.change >= 0 ? '+' : '-'}
+                        {!isKoreanStock && '$'}
+                        <NumberGroup>
+                           {formatNumber(formattedChange)
+                              .split('')
+                              .map((char, index) => (
+                                 <React.Fragment key={index}>
+                                    {char === ',' ? <NumberSeparator2 $isPositive={isPositive}>,</NumberSeparator2> : <FlipNumbers height={24} width={20} color={isPositive ? '#4eaf0a' : '#e01e1e'} background="transparent" play perspective={1000} duration={0.5} numbers={char} />}
+                                 </React.Fragment>
+                              ))}
+                        </NumberGroup>
+                        {isKoreanStock && <span className="unit">원</span>}
+                     </span>
+                     <span className="percent">
+                        ({currentStock.changePercent >= 0 ? '+' : '-'}
+                        {Math.abs(changePercent)}%)
+                     </span>
+                  </Change>
+               </PriceInfo>
+            </Header>
 
-         <StatsGrid>
-            <StatCard>
-               <StatLabel>거래량</StatLabel>
-               <StatValue>{currentStock.volume.toLocaleString()}</StatValue>
-            </StatCard>
-            <StatCard>
-               <StatLabel>시가총액</StatLabel>
-               <StatValue>{displayMarketCap}</StatValue>
-            </StatCard>
-            <StatCard>
-               <StatLabel>52주 최고</StatLabel>
-               <StatValue>{displayFiftyTwoWeekHigh}</StatValue>
-            </StatCard>
-            <StatCard>
-               <StatLabel>52주 최저</StatLabel>
-               <StatValue>{displayFiftyTwoWeekLow}</StatValue>
-            </StatCard>
-         </StatsGrid>
+            <ChartSection initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+               <StockChart symbol={symbol} />
+            </ChartSection>
+
+            <StatsGrid initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+               {[
+                  { label: '거래량', value: formatNumber(currentStock?.volume) },
+                  { label: '시가총액', value: displayMarketCap },
+                  { label: '52주 최고', value: displayFiftyTwoWeekHigh },
+                  { label: '52주 최저', value: displayFiftyTwoWeekLow },
+               ].map((stat, index) => (
+                  <StatCard key={stat.label} whileHover={{ scale: 1.02 }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 + index * 0.1 }}>
+                     <StatLabel>{stat.label}</StatLabel>
+                     <StatValue>{stat.value}</StatValue>
+                  </StatCard>
+               ))}
+            </StatsGrid>
+         </MainContent>
+
+         <NewsSection initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 }}>
+            <NewsHeader>
+               <NewsTitle>최근 뉴스</NewsTitle>
+               <NewsRefreshButton whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9, rotate: 360, transition: { duration: 0.5 } }}>
+                  <RefreshIcon sx={{ fontSize: '24px', color: 'white' }} />
+               </NewsRefreshButton>
+            </NewsHeader>
+            <NewsPlaceholder>
+               <NewsMessage>곧 뉴스 항목이 제공될 예정입니다</NewsMessage>
+            </NewsPlaceholder>
+         </NewsSection>
       </DetailContainer>
    )
 }
-
-const DetailContainer = styled.div`
-   max-width: 1200px;
-   margin: 0 auto;
-   padding: ${({ theme }) => theme.spacing.xl};
-`
-
-const SymbolName = styled.h1`
-   font-size: ${({ theme }) => theme.typography.fontSizes.xxl};
-   font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
-   color: ${({ theme }) => theme.colors.textSecondary};
-   margin: 0 auto;
-   display: flex;
-   justify-content: center;
-   margin-bottom: 10px;
-`
 
 const ConnectionStatus = styled.div`
    top: 1rem;
@@ -253,15 +251,65 @@ const MarketStatusBadge = styled.div`
    position: fixed;
 `
 
-const Header = styled.div`
-   display: flex;
-   justify-content: space-between;
-   align-items: flex-start;
-   margin-bottom: ${({ theme }) => theme.spacing.xl};
+const DetailContainer = styled(motion.div)`
+   max-width: 1400px;
+   margin: 0 auto;
    padding: ${({ theme }) => theme.spacing.xl};
+   display: grid;
+   grid-template-columns: 1fr 350px;
+   gap: ${({ theme }) => theme.spacing.xl};
+
+   @media (max-width: 1200px) {
+      grid-template-columns: 1fr;
+   }
+`
+
+const MainContent = styled.div`
+   display: flex;
+   flex-direction: column;
+   gap: ${({ theme }) => theme.spacing.xl};
+`
+
+const Header = styled(motion.div)`
    background: ${({ theme }) => theme.colors.surface};
+   padding: ${({ theme }) => theme.spacing.xl};
+   border-radius: ${({ theme }) => theme.borderRadius.large};
+   box-shadow: ${({ theme }) => theme.shadows.medium};
+   backdrop-filter: blur(10px);
+`
+
+const ChartSection = styled(motion.div)`
+   background: ${({ theme }) => theme.colors.surface};
+   padding: ${({ theme }) => theme.spacing.lg};
+   border-radius: ${({ theme }) => theme.borderRadius.large};
+   box-shadow: ${({ theme }) => theme.shadows.medium};
+   backdrop-filter: blur(10px);
+`
+
+const StatsGrid = styled(motion.div)`
+   display: grid;
+   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+   gap: ${({ theme }) => theme.spacing.md};
+`
+
+const StatCard = styled(motion.div)`
+   background: ${({ theme }) => theme.colors.surface};
+   padding: ${({ theme }) => theme.spacing.lg};
    border-radius: ${({ theme }) => theme.borderRadius.medium};
-   border: 1px solid ${({ theme }) => theme.colors.border};
+   box-shadow: ${({ theme }) => theme.shadows.medium};
+   backdrop-filter: blur(10px);
+   transition: all 0.3s ease;
+`
+
+const NewsSection = styled(motion.aside)`
+   background: ${({ theme }) => theme.colors.surface};
+   border-radius: ${({ theme }) => theme.borderRadius.large};
+   padding: ${({ theme }) => theme.spacing.lg};
+   height: fit-content;
+   position: sticky;
+   top: 20px;
+   box-shadow: ${({ theme }) => theme.shadows.medium};
+   backdrop-filter: blur(10px);
 `
 
 const MainInfo = styled.div`
@@ -386,25 +434,6 @@ const Change = styled(motion.div)`
    }
 `
 
-const StatsGrid = styled.div`
-   display: grid;
-   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-   gap: ${({ theme }) => theme.spacing.md};
-`
-
-const StatCard = styled.div`
-   background: ${({ theme }) => theme.colors.surface};
-   border: 1px solid ${({ theme }) => theme.colors.border};
-   border-radius: ${({ theme }) => theme.borderRadius.medium};
-   padding: ${({ theme }) => theme.spacing.lg};
-   transition: ${({ theme }) => theme.transitions.quick};
-
-   &:hover {
-      border-color: ${({ theme }) => theme.colors.primary};
-      box-shadow: ${({ theme }) => theme.shadows.glow};
-   }
-`
-
 const StatLabel = styled.div`
    font-size: ${({ theme }) => theme.typography.fontSizes.sm};
    color: ${({ theme }) => theme.colors.textSecondary};
@@ -451,6 +480,45 @@ const ErrorMessage = styled.div`
    background: ${({ theme }) => theme.colors.surface};
    border-radius: ${({ theme }) => theme.borderRadius.medium};
    border: 1px solid ${({ theme }) => theme.colors.border};
+`
+
+const NewsHeader = styled.div`
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   margin-bottom: ${({ theme }) => theme.spacing.md};
+`
+
+const NewsTitle = styled.h3`
+   font-size: ${({ theme }) => theme.typography.fontSizes.lg};
+   color: ${({ theme }) => theme.colors.text};
+   margin: 0;
+`
+
+const NewsRefreshButton = styled(motion.button)`
+   background: none;
+   border: none;
+   font-size: ${({ theme }) => theme.typography.fontSizes.lg};
+   cursor: pointer;
+   padding: ${({ theme }) => theme.spacing.xs};
+   border-radius: 50%;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+
+   &:hover {
+      background: ${({ theme }) => theme.colors.surfaceHover};
+   }
+`
+
+const NewsPlaceholder = styled.div`
+   padding: ${({ theme }) => theme.spacing.xl};
+   text-align: center;
+`
+
+const NewsMessage = styled.p`
+   color: ${({ theme }) => theme.colors.textSecondary};
+   margin: 0;
 `
 
 export default StockDetail

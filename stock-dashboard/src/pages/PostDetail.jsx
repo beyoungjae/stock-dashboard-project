@@ -88,17 +88,19 @@ const PostDetail = () => {
    const isLiked = post.Likes?.some((like) => like.UserId === user?.id)
 
    return (
-      <Container>
-         <Article initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+      <Container initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+         <Article initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
             <Header>
                <Title>{post.title}</Title>
                <MetaInfo>
-                  <Author as={Link} to={post.UserId === user?.id ? `/mypage` : `/dashboard/${post.UserId}`} onClick={(e) => e.stopPropagation()}>
-                     {post.User?.username}
-                  </Author>
+                  <AuthorSection>
+                     <AuthorAvatar>{post.User?.username?.[0]?.toUpperCase()}</AuthorAvatar>
+                     <Author as={Link} to={post.UserId === user?.id ? `/mypage` : `/dashboard/${post.UserId}`} onClick={(e) => e.stopPropagation()}>
+                        {post.User?.username}
+                     </Author>
+                  </AuthorSection>
                   <Separator>•</Separator>
                   <PostDate>
-                     {/* 게시글 작성 일자 계산 */}
                      {post.createdAt
                         ? formatDistanceToNow(new Date(post.createdAt), {
                              addSuffix: true,
@@ -111,46 +113,50 @@ const PostDetail = () => {
 
             {post.img && (
                <ImageContainer>
-                  <PostImage src={`${process.env.REACT_APP_API_URL}${post.img}`} alt={post.title} />
+                  <PostImage src={`${process.env.REACT_APP_API_URL}${post.img}`} alt={post.title} loading="lazy" />
                </ImageContainer>
             )}
 
             <Content>{post.content}</Content>
 
             <Actions>
-               <LikeButton onClick={handleLike} $isLiked={isLiked}>
+               <LikeButton onClick={handleLike} $isLiked={isLiked} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <LikeIcon>{isLiked ? '❤️' : '🤍'}</LikeIcon>
                   <LikeCount>{post.Likes?.length || 0}</LikeCount>
                </LikeButton>
 
                {user?.id === post.UserId && (
                   <AuthorActions>
-                     <EditButton as={Link} to={`/post/edit/${post.id}`}>
+                     <EditButton as={Link} to={`/post/edit/${post.id}`} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                         수정
                      </EditButton>
-                     <DeleteButton onClick={handleDelete}>삭제</DeleteButton>
+                     <DeleteButton onClick={handleDelete} whileHover={{ scale: 1.05, backgroundColor: '#ff4444' }} whileTap={{ scale: 0.95 }}>
+                        삭제
+                     </DeleteButton>
                   </AuthorActions>
                )}
             </Actions>
          </Article>
-         <CommentSection>
+
+         <CommentSection initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
             <CommentList postId={id} comments={post.Comments} />
          </CommentSection>
       </Container>
    )
 }
 
-const Container = styled.div`
-   max-width: 1000px;
+const Container = styled(motion.div)`
+   max-width: 900px;
    margin: 0 auto;
    padding: ${({ theme }) => theme.spacing.xl};
 `
 
 const Article = styled(motion.article)`
    background: ${({ theme }) => theme.colors.surface};
-   border: 1px solid ${({ theme }) => theme.colors.border};
-   border-radius: ${({ theme }) => theme.borderRadius.medium};
+   border-radius: ${({ theme }) => theme.borderRadius.large};
    padding: ${({ theme }) => theme.spacing.xl};
+   box-shadow: ${({ theme }) => theme.shadows.medium};
+   backdrop-filter: blur(10px);
 `
 
 const Header = styled.header`
@@ -162,16 +168,36 @@ const Title = styled.h1`
    font-weight: ${({ theme }) => theme.typography.fontWeights.bold};
    color: ${({ theme }) => theme.colors.text};
    margin: 0 0 ${({ theme }) => theme.spacing.md};
+   line-height: 1.4;
 `
 
 const MetaInfo = styled.div`
    display: flex;
    align-items: center;
-   gap: ${({ theme }) => theme.spacing.xs};
+   gap: ${({ theme }) => theme.spacing.md};
+`
+
+const AuthorSection = styled.div`
+   display: flex;
+   align-items: center;
+   gap: ${({ theme }) => theme.spacing.sm};
+`
+
+const AuthorAvatar = styled.div`
+   width: 32px;
+   height: 32px;
+   border-radius: 50%;
+   background: ${({ theme }) => theme.colors.primary};
+   color: white;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   font-weight: bold;
+   font-size: ${({ theme }) => theme.typography.fontSizes.md};
 `
 
 const Author = styled(motion.span)`
-   font-size: ${({ theme }) => theme.typography.fontSizes.sm};
+   font-size: ${({ theme }) => theme.typography.fontSizes.md};
    color: ${({ theme }) => theme.colors.primary};
    cursor: pointer;
    text-decoration: none;
@@ -192,8 +218,9 @@ const PostDate = styled.span`
 
 const ImageContainer = styled.div`
    margin: ${({ theme }) => theme.spacing.xl} 0;
-   border-radius: ${({ theme }) => theme.borderRadius.medium};
+   border-radius: ${({ theme }) => theme.borderRadius.large};
    overflow: hidden;
+   box-shadow: ${({ theme }) => theme.shadows.medium};
 `
 
 const PostImage = styled.img`
@@ -218,20 +245,16 @@ const Actions = styled.div`
    border-top: 1px solid ${({ theme }) => theme.colors.border};
 `
 
-const LikeButton = styled.button`
+const LikeButton = styled(motion.button)`
    display: flex;
    align-items: center;
    gap: ${({ theme }) => theme.spacing.sm};
-   padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
+   padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.lg};
    background: ${({ $isLiked, theme }) => ($isLiked ? `${theme.colors.error}15` : theme.colors.surfaceLight)};
    border: 1px solid ${({ $isLiked, theme }) => ($isLiked ? theme.colors.error : theme.colors.border)};
    border-radius: ${({ theme }) => theme.borderRadius.medium};
    cursor: pointer;
-   transition: ${({ theme }) => theme.transitions.quick};
-
-   &:hover {
-      transform: scale(1.05);
-   }
+   transition: all 0.3s ease;
 `
 
 const LikeIcon = styled.span`
@@ -273,8 +296,12 @@ const DeleteButton = styled(ActionButton)`
    border: none;
 `
 
-const CommentSection = styled.div`
+const CommentSection = styled(motion.div)`
    margin-top: ${({ theme }) => theme.spacing.xl};
+   background: ${({ theme }) => theme.colors.surface};
+   border-radius: ${({ theme }) => theme.borderRadius.large};
+   padding: ${({ theme }) => theme.spacing.xl};
+   box-shadow: ${({ theme }) => theme.shadows.medium};
 `
 
 const LoadingContainer = styled(motion.div)`

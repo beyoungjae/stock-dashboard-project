@@ -133,26 +133,38 @@ const PostList = ({ posts, loading, error }) => {
    }
 
    return (
-      <Container>
+      <Container initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
          {currentPosts.map((post) => (
             <React.Fragment key={post.id}>
-               <PostCard initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -5 }}>
+               <PostCard
+                  key={post.id}
+                  initial={{ opacity: 0, x: -50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{
+                     duration: 0.3,
+                     delay: 0,
+                     type: 'spring',
+                     stiffness: 100,
+                  }}
+                  whileHover={{
+                     scale: 1.02,
+                     boxShadow: '0 10px 20px rgba(0,0,0,0.2)',
+                  }}
+                  whileTap={{ scale: 0.98 }}
+               >
                   <PostContent>
                      <PostTitle>
-                        {post.title && (
-                           <Link
-                              to={`/post/${post.id}`}
-                              onMouseMove={(e) => handleMouseMove(e, post.id)} // PostTitle에 이벤트 추가
-                              onMouseLeave={handleMouseLeave}
-                           >
-                              {post.title}
-                           </Link>
-                        )}
+                        <TitleText to={`/post/${post.id}`} onMouseMove={(e) => handleMouseMove(e, post.id)} onMouseLeave={handleMouseLeave}>
+                           {post.title}
+                        </TitleText>
                      </PostTitle>
-                     <PostMeta>
-                        <Author as={Link} to={post.UserId === user?.id ? `/mypage` : `/dashboard/${post.UserId}`} onClick={(e) => e.stopPropagation()}>
-                           {post.User?.username}
-                        </Author>
+                     <PostMeta initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
+                        <AuthorContainer>
+                           <AuthorAvatar>{post.User?.username[0].toUpperCase()}</AuthorAvatar>
+                           <Author as={Link} to={`/dashboard/${post.UserId}`}>
+                              {post.User?.username}
+                           </Author>
+                        </AuthorContainer>
                         <Separator>•</Separator>
                         <PostDate>
                            {formatDistanceToNow(new Date(post.createdAt), {
@@ -171,30 +183,14 @@ const PostList = ({ posts, loading, error }) => {
                            <StatValue>{post.Comments?.length || 0}</StatValue>
                         </StatItem>
                         {user?.id === post.UserId && (
-                           <>
-                              <StatItemLinks>
-                                 <StatIcon>
-                                    <EditIcon
-                                       sx={{ ':hover': { color: 'primary.main' } }}
-                                       onClick={(e) => {
-                                          e.preventDefault()
-                                          handleEdit(post.id)
-                                       }}
-                                    />
-                                 </StatIcon>
-                              </StatItemLinks>
-                              <StatItemLinks>
-                                 <StatIcon>
-                                    <DeleteIcon
-                                       sx={{ ':hover': { color: 'error.main' } }}
-                                       onClick={(e) => {
-                                          e.preventDefault()
-                                          handleDelete(post.id)
-                                       }}
-                                    />
-                                 </StatIcon>
-                              </StatItemLinks>
-                           </>
+                           <ActionButtons>
+                              <ActionButton whileHover={{ scale: 1.1, color: '#4CAF50' }} whileTap={{ scale: 0.9 }} onClick={() => handleEdit(post.id)}>
+                                 <EditIcon />
+                              </ActionButton>
+                              <ActionButton whileHover={{ scale: 1.1, color: '#F44336' }} whileTap={{ scale: 0.9 }} onClick={() => handleDelete(post.id)}>
+                                 <DeleteIcon />
+                              </ActionButton>
+                           </ActionButtons>
                         )}
                      </PostStats>
                   </PostContent>
@@ -212,16 +208,16 @@ const PostList = ({ posts, loading, error }) => {
                </PostPreview>
             </React.Fragment>
          ))}
-         <PaginationContainer>
-            <PageButton onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))} disabled={currentPage === 1}>
+         <PaginationContainer initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+            <PageButton onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))} disabled={currentPage === 1} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                <NavigateBeforeIcon />
             </PageButton>
             {getPageNumbers().map((pageNum, index) => (
-               <PageNumber key={index} onClick={() => typeof pageNum === 'number' && setCurrentPage(pageNum)} active={currentPage === pageNum} isNumber={typeof pageNum === 'number'}>
+               <PageNumber key={index} onClick={() => typeof pageNum === 'number' && setCurrentPage(pageNum)} active={currentPage === pageNum} isNumber={typeof pageNum === 'number'} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                   {pageNum}
                </PageNumber>
             ))}
-            <PageButton onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages}>
+            <PageButton onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                <NavigateNextIcon />
             </PageButton>
          </PaginationContainer>
@@ -264,32 +260,78 @@ const PreviewContent = styled.p`
    -webkit-box-orient: vertical;
 `
 
-const PostCard = styled(motion.div)`
-   position: relative;
-   display: flex;
-   flex-direction: column;
-   background: ${({ theme }) => theme.colors.surface};
-   border: 1px solid ${({ theme }) => theme.colors.border};
-   border-radius: ${({ theme }) => theme.borderRadius.medium};
-   overflow: visible;
-   text-decoration: none;
-   color: inherit;
-   padding: ${({ theme }) => theme.spacing.md};
-   font-size: ${({ theme }) => theme.typography.fontSizes.md};
-   font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
+const Container = styled(motion.div)`
+   max-width: 1200px;
+   margin: 0 auto;
+   padding: ${({ theme }) => theme.spacing.xl};
 `
 
-const Container = styled.div`
-   display: flex;
-   flex-direction: column;
-   gap: ${({ theme }) => theme.spacing.lg};
+const PostCard = styled(motion.div)`
+   background: ${({ theme }) => theme.colors.surface};
+   border-radius: ${({ theme }) => theme.borderRadius.large};
+   margin-bottom: ${({ theme }) => theme.spacing.lg};
+   overflow: hidden;
+   border: 1px solid ${({ theme }) => theme.colors.border};
+   backdrop-filter: blur(10px);
+   transition: all 0.05s ease;
 `
 
 const PostContent = styled.div`
-   padding: ${({ theme }) => theme.spacing.lg};
-   flex: 1;
+   padding: ${({ theme }) => theme.spacing.xl};
+`
+
+const TitleText = styled(Link)`
+   font-size: ${({ theme }) => theme.typography.fontSizes.xl};
+   color: ${({ theme }) => theme.colors.text};
+   margin: 0;
+   line-height: 1.4;
+   transition: color 0.2s ease;
+   text-decoration: none;
+   &:hover {
+      color: ${({ theme }) => theme.colors.primary};
+   }
+`
+
+const AuthorContainer = styled.div`
    display: flex;
-   flex-direction: column;
+   align-items: center;
+   gap: ${({ theme }) => theme.spacing.sm};
+`
+
+const AuthorAvatar = styled.div`
+   width: 28px;
+   height: 28px;
+   border-radius: 50%;
+   background: ${({ theme }) => theme.colors.primary};
+   color: white;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   font-weight: bold;
+   font-size: ${({ theme }) => theme.typography.fontSizes.sm};
+`
+
+const ActionButtons = styled.div`
+   display: flex;
+   gap: ${({ theme }) => theme.spacing.sm};
+   margin-left: auto;
+`
+
+const ActionButton = styled(motion.button)`
+   background: none;
+   border: none;
+   cursor: pointer;
+   padding: ${({ theme }) => theme.spacing.xs};
+   border-radius: 50%;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   color: ${({ theme }) => theme.colors.textSecondary};
+   transition: all 0.2s ease;
+
+   &:hover {
+      background: ${({ theme }) => theme.colors.surfaceHover};
+   }
 `
 
 const PostTitle = styled.div`
@@ -348,12 +390,6 @@ const PostStats = styled.div`
 `
 
 const StatItem = styled.div`
-   display: flex;
-   align-items: center;
-   gap: ${({ theme }) => theme.spacing.xs};
-`
-
-const StatItemLinks = styled(motion(Link))`
    display: flex;
    align-items: center;
    gap: ${({ theme }) => theme.spacing.xs};

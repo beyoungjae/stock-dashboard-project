@@ -48,7 +48,7 @@ const popularStocks = [
    },
 ]
 
-// 기본 애니메이션 설정 home페이지 전역으로 적용
+// 기본 애니메이션 설정
 const containerVariants = {
    hidden: { opacity: 0 },
    visible: {
@@ -66,7 +66,7 @@ const containerVariants = {
    },
 }
 
-// 아이템 애니메이션 설정 home페이지 전역으로 적용
+// 아이템 애니메이션 설정
 const itemVariants = {
    hidden: { opacity: 0, y: 20 },
    visible: {
