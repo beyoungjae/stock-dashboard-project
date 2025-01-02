@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import styled from 'styled-components'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
@@ -25,6 +25,8 @@ const Signup = () => {
          [name]: value,
       }))
 
+      e.preventDefault()
+
       // 이메일 필드가 변경될 때마다 유효성 검사
       if (name === 'email' && value && !isValidEmail(value)) {
          setError('올바른 이메일 형식이 아닙니다.')
@@ -48,49 +50,52 @@ const Signup = () => {
    }
 
    // 회원가입 전송
-   const handleSubmit = async (e) => {
-      e.preventDefault()
-      setError(null)
-      setIsLoading(true)
+   const handleSubmit = useCallback(
+      async (e) => {
+         e.preventDefault()
+         setError(null)
+         setIsLoading(true)
 
-      // 기본 필드 검사
-      if (!formData.email || !formData.password || !formData.nickname) {
-         setError('모든 필드를 입력해주세요.')
-         setIsLoading(false)
-         return
-      }
+         // 기본 필드 검사
+         if (!formData.email || !formData.password || !formData.nickname) {
+            setError('모든 필드를 입력해주세요.')
+            setIsLoading(false)
+            return
+         }
 
-      // 이메일 유효성 검사 추가
-      if (!isValidEmail(formData.email)) {
-         setError('올바른 이메일 형식이 아닙니다.')
-         setIsLoading(false)
-         return
-      }
+         // 이메일 유효성 검사 추가
+         if (!isValidEmail(formData.email)) {
+            setError('올바른 이메일 형식이 아닙니다.')
+            setIsLoading(false)
+            return
+         }
 
-      // 비밀번호 확인 검사
-      if (formData.password !== formData.confirmPassword) {
-         setError('비밀번호가 일치하지 않습니다.')
-         setIsLoading(false)
-         return
-      }
+         // 비밀번호 확인 검사
+         if (formData.password !== formData.confirmPassword) {
+            setError('비밀번호가 일치하지 않습니다.')
+            setIsLoading(false)
+            return
+         }
 
-      try {
-         await dispatch(
-            registerUserThunk({
-               email: formData.email,
-               password: formData.password,
-               nickname: formData.nickname,
-            })
-         ).unwrap()
-         navigate('/login')
-         window.location.reload()
-      } catch (error) {
-         setError(error.message || '회원가입에 실패했습니다.')
-         console.error('회원가입 실패:', error)
-      } finally {
-         setIsLoading(false)
-      }
-   }
+         try {
+            await dispatch(
+               registerUserThunk({
+                  email: formData.email,
+                  password: formData.password,
+                  nickname: formData.nickname,
+               })
+            ).unwrap()
+            navigate('/login')
+            window.location.reload()
+         } catch (error) {
+            setError(error.message || '회원가입에 실패했습니다.')
+            console.error('회원가입 실패:', error)
+         } finally {
+            setIsLoading(false)
+         }
+      },
+      [formData, dispatch, navigate]
+   )
 
    return (
       <SignupContainer>
