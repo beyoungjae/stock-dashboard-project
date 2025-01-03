@@ -26,7 +26,7 @@ const UserStats = () => {
       },
       {
          id: 'likes',
-         title: '좋아요 받은 횟수',
+         title: '좋아요 누른 횟수',
          value: activity?.likes_count || 0,
          icon: '❤️',
          color: '#F44336',
@@ -34,7 +34,7 @@ const UserStats = () => {
    ]
 
    const handleStatClick = (statId) => {
-      dispatch(setActivityFilter(activityFilter === statId ? null : statId))
+      dispatch(setActivityFilter(activityFilter === statId ? null : statId)) // 통계 필터 변경, 이미 선택된 필터라면 해제
    }
 
    return (

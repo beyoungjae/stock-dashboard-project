@@ -23,7 +23,7 @@ const SearchBar = () => {
 
    return (
       <SearchForm onSubmit={handleSearch}>
-         <SearchInput type="text" placeholder="주식 심볼 또는 회사명 검색..." value={query} onChange={handleChange} />
+         <SearchInput type="text" placeholder="심볼(예: MSFT, BTC-USD 등) 또는 회사명(예: samsung, tesla 등) 검색" value={query} onChange={handleChange} />
          <SearchButton type="submit">
             <SearchIcon />
          </SearchButton>

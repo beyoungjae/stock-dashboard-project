@@ -36,7 +36,7 @@ const Navbar = ({ user }) => {
             </MenuButton>
             <Logo to="/" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                <LogoIcon>📈</LogoIcon>
-               <LogoText>주식 대시보드</LogoText>
+               <LogoText>Stock Dashboard</LogoText>
             </Logo>
             <Nav>
                <AnimatePresence mode="wait">

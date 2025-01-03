@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
 import FlipNumbers from 'react-flip-numbers'
-import { selectCurrentStock, selectStatus, selectErrors, getQuote, selectConnectionStatus, subscribeToQuote, setConnectionStatus } from '../store/slices/stockSlice'
+import { selectCurrentStock, selectStatus, selectErrors, getQuote, subscribeToQuote, setConnectionStatus, fetchStockNews } from '../store/slices/stockSlice'
 import StockChart from '../components/StockChart'
-
+import NewsList from '../components/NewsList'
 import RefreshIcon from '@mui/icons-material/Refresh'
 
 const StockDetail = () => {
@@ -15,8 +15,8 @@ const StockDetail = () => {
    const currentStock = useSelector(selectCurrentStock)
    const status = useSelector(selectStatus)
    const errors = useSelector(selectErrors)
-   const isConnected = useSelector(selectConnectionStatus) // 연결 상태
-   const [marketStatus, setMarketStatus] = useState('UNKNOWN') // 시장 상태 UNKNOWN = 알 수 없음
+   // const isConnected = useSelector(selectConnectionStatus) // 연결 상태 [테스트용]
+   // const [marketStatus, setMarketStatus] = useState('UNKNOWN') // 시장 상태 UNKNOWN = 알 수 없음 [테스트용]
 
    useEffect(() => {
       if (!symbol) return
@@ -33,17 +33,17 @@ const StockDetail = () => {
          if (unsubscribe) {
             unsubscribe()
             dispatch(setConnectionStatus(false))
-            setMarketStatus('UNKNOWN')
+            // setMarketStatus('UNKNOWN') [테스트용]
          }
       }
    }, [symbol, dispatch])
 
-   // 시장 상태 업데이트
-   useEffect(() => {
-      if (currentStock?.marketStatus) {
-         setMarketStatus(currentStock.marketStatus)
-      }
-   }, [currentStock])
+   // // 시장 상태 업데이트 [테스트용]
+   // useEffect(() => {
+   //    if (currentStock?.marketStatus) {
+   //       setMarketStatus(currentStock.marketStatus)
+   //    }
+   // }, [currentStock])
 
    // 로딩 상태 표시
    if (status.quote === 'loading') {
@@ -136,89 +136,98 @@ const StockDetail = () => {
    const displayMarketCap = currentStock.marketCap ? formatMarketCap(currentStock.marketCap, isKoreanStock) : '정보 없음'
 
    return (
-      <DetailContainer initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-         <MainContent>
-            <Header initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-               <MainInfo>
-                  <SymbolSection>
+      <>
+         <TitleName>{currentStock?.name} 상세 데이터</TitleName>
+         <DetailContainer initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+            <MainContent>
+               <Header initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+                  <MainInfo>
+                     <SymbolSection>
+                        <CompanyName>{currentStock?.name}</CompanyName>
+                        <Exchange>{currentStock?.exchange}</Exchange>
+                     </SymbolSection>
                      <Symbol>{symbol}</Symbol>
-                     <Exchange>{currentStock?.exchange}</Exchange>
-                     <ConnectionStatus $isConnected={isConnected}>{isConnected ? '연결됨' : '연결 끊김'}</ConnectionStatus>
-                     <MarketStatusBadge $status={marketStatus}>{marketStatus === 'OPEN' ? '거래중' : marketStatus === 'CLOSED' ? '장 마감' : '로딩중'}</MarketStatusBadge>
-                  </SymbolSection>
-                  <CompanyName>{currentStock?.name}</CompanyName>
-               </MainInfo>
+                  </MainInfo>
 
-               <PriceInfo>
-                  <Price>
-                     {!isKoreanStock && <span className="currency">$</span>}
-                     <NumberGroup>
-                        {formatNumber(formattedPrice)
-                           .split('')
-                           .map((char, index) => (
-                              <React.Fragment key={index}>{char === ',' ? <NumberSeparator>,</NumberSeparator> : <FlipNumbers height={48} width={32} color="white" background="transparent" play perspective={1000} duration={0.5} numbers={char} />}</React.Fragment>
-                           ))}
-                     </NumberGroup>
-                     {isKoreanStock && <span className="unit">원</span>}
-                  </Price>
-                  <Change $isPositive={isPositive}>
-                     <span>
-                        {currentStock.change >= 0 ? '+' : '-'}
-                        {!isKoreanStock && '$'}
+                  <PriceInfo>
+                     <Price>
+                        {!isKoreanStock && <span className="currency">$</span>}
                         <NumberGroup>
-                           {formatNumber(formattedChange)
+                           {formatNumber(formattedPrice)
                               .split('')
                               .map((char, index) => (
-                                 <React.Fragment key={index}>
-                                    {char === ',' ? <NumberSeparator2 $isPositive={isPositive}>,</NumberSeparator2> : <FlipNumbers height={24} width={20} color={isPositive ? '#4eaf0a' : '#e01e1e'} background="transparent" play perspective={1000} duration={0.5} numbers={char} />}
-                                 </React.Fragment>
+                                 <React.Fragment key={index}>{char === ',' ? <NumberSeparator>,</NumberSeparator> : <FlipNumbers height={48} width={32} color="white" background="transparent" play perspective={1000} duration={0.5} numbers={char} />}</React.Fragment>
                               ))}
                         </NumberGroup>
                         {isKoreanStock && <span className="unit">원</span>}
-                     </span>
-                     <span className="percent">
-                        ({currentStock.changePercent >= 0 ? '+' : '-'}
-                        {Math.abs(changePercent)}%)
-                     </span>
-                  </Change>
-               </PriceInfo>
-            </Header>
+                     </Price>
+                     <Change $isPositive={isPositive}>
+                        <span>
+                           {currentStock.change >= 0 ? '+' : '-'}
+                           {!isKoreanStock && '$'}
+                           <NumberGroup>
+                              {formatNumber(formattedChange)
+                                 .split('')
+                                 .map((char, index) => (
+                                    <React.Fragment key={index}>
+                                       {char === ',' ? <NumberSeparator2 $isPositive={isPositive}>,</NumberSeparator2> : <FlipNumbers height={24} width={20} color={isPositive ? '#4eaf0a' : '#e01e1e'} background="transparent" play perspective={1000} duration={0.5} numbers={char} />}
+                                    </React.Fragment>
+                                 ))}
+                           </NumberGroup>
+                           {isKoreanStock && <span className="unit">원</span>}
+                        </span>
+                        <span className="percent">
+                           ({currentStock.changePercent >= 0 ? '+' : '-'}
+                           {Math.abs(changePercent)}%)
+                        </span>
+                     </Change>
+                  </PriceInfo>
+               </Header>
 
-            <ChartSection initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-               <StockChart symbol={symbol} />
-            </ChartSection>
+               <ChartSection initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                  <StockChart symbol={symbol} />
+               </ChartSection>
 
-            <StatsGrid initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-               {[
-                  { label: '거래량', value: formatNumber(currentStock?.volume) },
-                  { label: '시가총액', value: displayMarketCap },
-                  { label: '52주 최고', value: displayFiftyTwoWeekHigh },
-                  { label: '52주 최저', value: displayFiftyTwoWeekLow },
-               ].map((stat, index) => (
-                  <StatCard key={stat.label} whileHover={{ scale: 1.02 }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 + index * 0.1 }}>
-                     <StatLabel>{stat.label}</StatLabel>
-                     <StatValue>{stat.value}</StatValue>
-                  </StatCard>
-               ))}
-            </StatsGrid>
-         </MainContent>
+               <StatsGrid initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+                  {[
+                     { label: '거래량', value: formatNumber(currentStock?.volume) },
+                     { label: '시가총액', value: displayMarketCap },
+                     { label: '52주 최고', value: displayFiftyTwoWeekHigh },
+                     { label: '52주 최저', value: displayFiftyTwoWeekLow },
+                  ].map((stat, index) => (
+                     <StatCard key={stat.label} whileHover={{ scale: 1.02 }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 + index * 0.1 }}>
+                        <StatLabel>{stat.label}</StatLabel>
+                        <StatValue>{stat.value}</StatValue>
+                     </StatCard>
+                  ))}
+               </StatsGrid>
+            </MainContent>
 
-         <NewsSection initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 }}>
-            <NewsHeader>
-               <NewsTitle>최근 뉴스</NewsTitle>
-               <NewsRefreshButton whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9, rotate: 360, transition: { duration: 0.5 } }}>
-                  <RefreshIcon sx={{ fontSize: '24px', color: 'white' }} />
-               </NewsRefreshButton>
-            </NewsHeader>
-            <NewsPlaceholder>
-               <NewsMessage>곧 뉴스 항목이 제공될 예정입니다</NewsMessage>
-            </NewsPlaceholder>
-         </NewsSection>
-      </DetailContainer>
+            <NewsSection initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 }}>
+               <NewsHeader>
+                  <NewsTitle>최근 뉴스</NewsTitle>
+                  <SourceTitle>출처 : yahoo finance</SourceTitle>
+                  <NewsRefreshButton whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9, rotate: 360 }} onClick={() => dispatch(fetchStockNews(symbol))}>
+                     <RefreshIcon sx={{ fontSize: '24px', color: 'white' }} />
+                  </NewsRefreshButton>
+               </NewsHeader>
+               <NewsList symbol={symbol} />
+            </NewsSection>
+         </DetailContainer>
+      </>
    )
 }
 
-const ConnectionStatus = styled.div`
+const TitleName = styled.h1`
+   font-size: ${({ theme }) => theme.typography.fontSizes.xxxl};
+   font-weight: ${({ theme }) => theme.typography.fontWeights.bold};
+   color: ${({ theme }) => theme.colors.text};
+   margin: 0;
+   text-align: center;
+   padding: ${({ theme }) => theme.spacing.xl};
+`
+
+/* const ConnectionStatus = styled.div`
    top: 1rem;
    right: 1rem;
    padding: 0.5rem 1rem;
@@ -249,7 +258,7 @@ const MarketStatusBadge = styled.div`
    font-size: 0.875rem;
    z-index: 1000;
    position: fixed;
-`
+` */
 
 const DetailContainer = styled(motion.div)`
    max-width: 1400px;
@@ -325,9 +334,9 @@ const SymbolSection = styled.div`
 `
 
 const Symbol = styled.h1`
-   font-size: ${({ theme }) => theme.typography.fontSizes.xxl};
-   font-weight: ${({ theme }) => theme.typography.fontWeights.bold};
-   color: ${({ theme }) => theme.colors.text};
+   font-size: ${({ theme }) => theme.typography.fontSizes.lg};
+   font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
+   color: ${({ theme }) => theme.colors.textSecondary};
    margin: 0;
 `
 
@@ -341,9 +350,9 @@ const Exchange = styled.span`
 `
 
 const CompanyName = styled.h2`
-   font-size: ${({ theme }) => theme.typography.fontSizes.lg};
-   font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
-   color: ${({ theme }) => theme.colors.textSecondary};
+   font-size: ${({ theme }) => theme.typography.fontSizes.xxl};
+   font-weight: ${({ theme }) => theme.typography.fontWeights.bold};
+   color: ${({ theme }) => theme.colors.text};
    margin: 0;
 `
 
@@ -495,6 +504,12 @@ const NewsTitle = styled.h3`
    margin: 0;
 `
 
+const SourceTitle = styled.span`
+   font-size: ${({ theme }) => theme.typography.fontSizes.sm};
+   color: ${({ theme }) => theme.colors.textSecondary};
+   margin-bottom: ${({ theme }) => theme.spacing.sm};
+`
+
 const NewsRefreshButton = styled(motion.button)`
    background: none;
    border: none;
@@ -509,16 +524,6 @@ const NewsRefreshButton = styled(motion.button)`
    &:hover {
       background: ${({ theme }) => theme.colors.surfaceHover};
    }
-`
-
-const NewsPlaceholder = styled.div`
-   padding: ${({ theme }) => theme.spacing.xl};
-   text-align: center;
-`
-
-const NewsMessage = styled.p`
-   color: ${({ theme }) => theme.colors.textSecondary};
-   margin: 0;
 `
 
 export default StockDetail

@@ -8,18 +8,18 @@ import ActivityList from '../components/ActivityList'
 import UserStats from '../components/UserStats'
 
 const UserDashboard = () => {
-   const { userId } = useParams()
+   const { userId } = useParams() // 사용자 ID useParams로 가져오기
    const dispatch = useDispatch()
    const { activity, loading, error } = useSelector((state) => state.user)
 
    useEffect(() => {
       if (userId) {
-         dispatch(getUserActivityThunk(userId))
+         dispatch(getUserActivityThunk(userId)) // 사용자 활동 조회
       }
    }, [dispatch, userId])
 
-   if (loading) return <div>Loading...</div>
-   if (error) return <div>Error: {error}</div>
+   if (loading) return <div>로딩중...</div>
+   if (error) return <div>에러: {error}</div>
 
    return (
       <DashboardContainer>
@@ -95,12 +95,6 @@ const SectionTitle = styled.h2`
    font-weight: ${({ theme }) => theme.typography.fontWeights.bold};
    color: ${({ theme }) => theme.colors.text};
    margin: 0 0 ${({ theme }) => theme.spacing.xs};
-`
-
-const SectionDescription = styled.p`
-   font-size: ${({ theme }) => theme.typography.fontSizes.md};
-   color: ${({ theme }) => theme.colors.textSecondary};
-   margin: 0;
 `
 
 export default UserDashboard

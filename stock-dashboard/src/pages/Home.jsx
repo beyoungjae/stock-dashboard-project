@@ -8,7 +8,7 @@ import SearchBar from '../components/SearchBar'
 import StockList from '../components/StockList'
 import { selectStatus, selectSearchResults } from '../store/slices/stockSlice'
 
-// 인기 주식 목록 데이터 예시로 표시
+// 인기 주식, 코인 목록 데이터 예시로 표시
 const popularStocks = [
    {
       symbol: '005930.KS',
@@ -35,16 +35,52 @@ const popularStocks = [
       category: 'IT/플랫폼',
    },
    {
-      symbol: '207940.KS',
-      name: '삼성바이오로직스',
-      description: '바이오의약품 선도기업',
-      category: '바이오',
+      symbol: 'MSFT',
+      name: '마이크로소프트',
+      description: '소프트웨어 및 하드웨어 개발 기업',
+      category: '글로벌 IT',
    },
    {
       symbol: 'AAPL',
       name: '애플',
       description: '아이폰, 맥북의 제조사',
       category: '글로벌 IT',
+   },
+   {
+      symbol: 'TSLA',
+      name: '테슬라',
+      description: '전기차 제조사',
+      category: '전기차',
+   },
+   {
+      symbol: 'AMZN',
+      name: '아마존',
+      description: '전자상거래 및 클라우드 서비스 기업',
+      category: '전자상거래',
+   },
+   {
+      symbol: 'NVDA',
+      name: '엔비디아',
+      description: '그래픽 처리 장치 제조사',
+      category: '글로벌 IT',
+   },
+   {
+      symbol: 'GOOGL',
+      name: '구글',
+      description: '인터넷 검색 및 광고 서비스 기업',
+      category: '글로벌 IT',
+   },
+   {
+      symbol: 'BTC-USD',
+      name: '비트코인',
+      description: '가상화폐',
+      category: '가상화폐',
+   },
+   {
+      symbol: 'ETH-USD',
+      name: '이더리움',
+      description: '가상화폐',
+      category: '가상화폐',
    },
 ]
 
@@ -54,14 +90,14 @@ const containerVariants = {
    visible: {
       opacity: 1,
       transition: {
-         when: 'beforeChildren',
+         when: 'beforeChildren', // 자식 요소들이 애니메이션 시작 전에 렌더링되도록 설정
          staggerChildren: 0.1,
       },
    },
    exit: {
       opacity: 0,
       transition: {
-         when: 'afterChildren',
+         when: 'afterChildren', // 자식 요소들이 애니메이션 완료 후에 사라지도록 설정
       },
    },
 }
@@ -120,10 +156,10 @@ const Home = () => {
          <SearchSection variants={itemVariants}>
             <WelcomeSection>
                <Title>
-                  실시간 주식 검색
+                  실시간 검색
                   <TitleIcon>📈</TitleIcon>
                </Title>
-               <Subtitle>전 세계 주식 시장의 실시간 정보를 검색하고 분석하세요</Subtitle>
+               <Subtitle>전 세계 주식, 코인 시장의 실시간 정보를 검색하고 분석하세요</Subtitle>
             </WelcomeSection>
             <SearchBar onSearch={handleSearch} />
          </SearchSection>
@@ -136,7 +172,7 @@ const Home = () => {
                </ContentSection>
             ) : (
                <PopularStocksSection key="popular-stocks" variants={containerVariants} initial="hidden" animate="visible" exit="exit">
-                  <SectionTitle>인기 있는 주식 둘러보기</SectionTitle>
+                  <SectionTitle>인기 있는 주식, 코인 둘러보기</SectionTitle>
                   <SectionSubtitle>처음이시라면 이런 종목은 어떠세요?</SectionSubtitle>
                   <StockCardGrid>
                      {popularStocks.map((stock) => (

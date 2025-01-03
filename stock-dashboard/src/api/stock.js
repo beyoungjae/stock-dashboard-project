@@ -219,4 +219,22 @@ export const stockAPI = {
          throw error
       }
    },
+
+   // 주식 뉴스 조회
+   getStockNews: async (symbol) => {
+      try {
+         const formattedSymbol = formatSymbol(symbol)
+         const response = await retryRequest(() =>
+            api.get(`/news/${formattedSymbol}`, {
+               headers: {
+                  Source: 'YAHOO',
+               },
+            })
+         )
+         return response
+      } catch (error) {
+         console.error('뉴스 조회 오류:', error)
+         throw error
+      }
+   },
 }

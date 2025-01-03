@@ -28,7 +28,7 @@ const PopularPosts = () => {
       <Container>
          <Header initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
             <Title>인기 게시글</Title>
-            <Description>가장 많은 관심을 받은 게시글들을 모아봤습니다. 좋아요 수가 많은 인기 있는 게시글들을 확인해보세요.</Description>
+            <Description>가장 많은 관심을 받은 게시글들을 모아봤습니다. 좋아요 수가 많은 인기있는 게시글들을 확인해보세요.</Description>
          </Header>
 
          <Content>

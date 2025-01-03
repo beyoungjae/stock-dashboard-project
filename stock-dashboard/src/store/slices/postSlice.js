@@ -64,34 +64,10 @@ export const deletePost = createAsyncThunk('post/delete', async (postId, { rejec
    }
 })
 
-// 게시글 좋아요/취소
-// export const toggleLike = createAsyncThunk('post/toggleLike', async ({ postId, liked }, { getState, rejectWithValue }) => {
-//    try {
-//       const state = getState()
-//       const userId = state.auth.user.id // 현재 로그인한 사용자 ID
-
-//       if (liked) {
-//          // 좋아요 취소
-//          await postAPI.unlikePost(postId)
-//       } else {
-//          // 좋아요 등록
-//          await postAPI.likePost(postId)
-//       }
-
-//       // 좋아요 상태를 포함한 게시글 정보 반환
-//       const response = await postAPI.getPost(postId)
-//       return { postId, liked: !liked, likes: response.Likes, likeCount: response.Likes.length }
-//    } catch (error) {
-//       console.error('좋아요 토글 오류:', error)
-//       return rejectWithValue(error.message)
-//    }
-// })
-
 // 게시글 좋아요
-export const likePost = createAsyncThunk('post/like', async (postId, { dispatch, rejectWithValue }) => {
+export const likePost = createAsyncThunk('post/like', async (postId, { rejectWithValue }) => {
    try {
       const response = await postAPI.likePost(postId)
-      dispatch(getPost(postId)) // 게시글 정보 다시 불러오기
       return response.userId // 좋아요를 누른 사용자 ID 반환
    } catch (error) {
       return rejectWithValue(error.message)
@@ -99,10 +75,9 @@ export const likePost = createAsyncThunk('post/like', async (postId, { dispatch,
 })
 
 // 게시글 좋아요 취소
-export const unlikePost = createAsyncThunk('post/unlike', async (postId, { dispatch, rejectWithValue }) => {
+export const unlikePost = createAsyncThunk('post/unlike', async (postId, { rejectWithValue }) => {
    try {
       const response = await postAPI.unlikePost(postId)
-      dispatch(getPost(postId)) // 게시글 정보 다시 불러오기
       return response.userId // 좋아요를 취소한 사용자 ID 반환
    } catch (error) {
       return rejectWithValue(error.message)
@@ -238,24 +213,6 @@ const postSlice = createSlice({
             state.loading.delete = false
             state.error.delete = action.payload
          })
-
-         // 게시글 좋아요/취소
-         // .addCase(toggleLike.pending, (state) => {
-         //    state.loading.like = true
-         //    state.error.like = null
-         // })
-         // .addCase(toggleLike.fulfilled, (state, action) => {
-         //    const { postId, liked, likes, likeCount } = action.payload
-         //    if (state.currentPost && state.currentPost.id === postId) {
-         //       state.currentPost.liked = liked
-         //       state.currentPost.Likes = likes
-         //       state.currentPost.likeCount = likeCount
-         //    }
-         // })
-         // .addCase(toggleLike.rejected, (state, action) => {
-         //    state.loading.like = false
-         //    state.error.like = action.payload
-         // })
 
          // 게시글 좋아요
          .addCase(likePost.pending, (state) => {

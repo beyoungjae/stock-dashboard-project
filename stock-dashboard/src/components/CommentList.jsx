@@ -5,8 +5,9 @@ import { useSelector, useDispatch } from 'react-redux'
 import { formatDistanceToNow } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { getPost } from '../store/slices/postSlice'
-import * as commentAPI from '../api/comment'
+import * as commentAPI from '../api/comment' // slice에서 사용하지 않고, 직접 사용
 
+// 날짜 형식 변환 : 댓글 작성 시 날짜 형식 변환
 const formatDate = (dateString) => {
    try {
       const date = new Date(dateString)
@@ -30,30 +31,32 @@ const CommentList = ({ postId, comments = [] }) => {
    const [isSubmitting, setIsSubmitting] = useState(false)
    const [error, setError] = useState(null)
 
+   // 댓글 작성
    const handleSubmit = async (e) => {
       e.preventDefault()
-      if (!newComment.trim() || isSubmitting) return
+      if (!newComment.trim() || isSubmitting) return // 댓글 입력창이 비어있거나 이미 작성 중인 경우 전송 중단
 
-      setIsSubmitting(true)
-      setError(null)
+      setIsSubmitting(true) // 작성 중 상태로 변경
+      setError(null) // 오류 메시지 초기화
 
       try {
-         await commentAPI.createComment(postId, newComment.trim())
-         setNewComment('')
-         dispatch(getPost(postId)) // 댓글이 추가된 게시글 정보를 다시 불러옵니다
+         await commentAPI.createComment(postId, newComment.trim()) // postId와 댓글 내용을 사용하여 댓글 작성, 빈 댓글 입력 방지
+         setNewComment('') // 댓글 작성 후 댓글 입력창 초기화
+         dispatch(getPost(postId)) // 댓글이 추가된 게시글 정보
       } catch (error) {
          setError(error.message || '댓글 작성 중 오류가 발생했습니다.')
       } finally {
-         setIsSubmitting(false)
+         setIsSubmitting(false) // 작성 중 상태 초기화
       }
    }
 
+   // 댓글 삭제
    const handleDelete = async (commentId) => {
-      if (!window.confirm('정말로 이 댓글을 삭제하시겠습니까?')) return
+      if (!window.confirm('정말로 이 댓글을 삭제하시겠습니까?')) return // 사용자 확인 후 댓글 삭제
 
       try {
-         await commentAPI.deleteComment(commentId)
-         dispatch(getPost(postId)) // 댓글이 삭제된 게시글 정보를 다시 불러옵니다
+         await commentAPI.deleteComment(commentId) // 댓글 삭제
+         dispatch(getPost(postId)) // 댓글이 삭제된 게시글 정보
       } catch (error) {
          console.error('댓글 삭제 실패:', error)
          alert(error.message || '댓글 삭제 중 오류가 발생했습니다.')

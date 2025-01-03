@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { stockAPI } from '../api/stock'
 
 const StockChart = ({ symbol }) => {
+   // 부모 컴포넌트에서 전달된 symbol 값을 사용하여 주식 차트 데이터를 불러오기
    const [chartData, setChartData] = useState([])
    const [loading, setLoading] = useState(true)
    const [error, setError] = useState(null)
@@ -171,6 +172,7 @@ const StockChart = ({ symbol }) => {
       return () => {
          isMounted = false // 컴포넌트 언마운트 시 플래그 초기화
       }
+      // eslint-disable-next-line
    }, [symbol, chartRange, chartInterval, validateChartData]) // 차트 데이터 로딩 함수 실행
 
    const handleRangeChange = (range) => {

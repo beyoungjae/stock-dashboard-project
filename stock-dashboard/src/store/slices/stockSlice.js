@@ -127,23 +127,41 @@ export const fetchMarketOverview = createAsyncThunk('stock/fetchMarketOverview',
    }
 })
 
+// 주식 뉴스 조회
+export const fetchStockNews = createAsyncThunk('stock/fetchStockNews', async (symbol, { rejectWithValue }) => {
+   try {
+      const response = await stockAPI.getStockNews(symbol)
+      return response
+   } catch (error) {
+      return rejectWithValue(error.message)
+   }
+})
+
 const initialState = {
    searchResults: [],
    currentStock: null,
    chartData: null,
    marketOverview: null,
+   news: {
+      items: [],
+      status: 'idle',
+      error: null,
+      lastUpdated: null,
+   },
    isConnected: false,
    status: {
       search: 'idle',
       quote: 'idle',
       chart: 'idle',
       marketOverview: 'idle',
+      news: 'idle',
    },
    error: {
       search: null,
       quote: null,
       chart: null,
       marketOverview: null,
+      news: null,
    },
 }
 
@@ -151,6 +169,7 @@ const stockSlice = createSlice({
    name: 'stock',
    initialState,
    reducers: {
+      // clear 함수로 리듀서 초기화
       clearSearchResults: (state) => {
          state.searchResults = []
          state.status.search = 'idle'
@@ -163,6 +182,14 @@ const stockSlice = createSlice({
          state.status.chart = 'idle'
          state.error.quote = null
          state.error.chart = null
+      },
+      clearStockNews: (state) => {
+         state.news = {
+            items: [],
+            status: 'idle',
+            error: null,
+            lastUpdated: null,
+         }
       },
    },
    extraReducers: (builder) => {
@@ -230,6 +257,22 @@ const stockSlice = createSlice({
             state.error.marketOverview = action.payload
             state.marketOverview = null
          })
+
+         // 뉴스 조회
+         .addCase(fetchStockNews.pending, (state) => {
+            state.news.status = 'loading'
+            state.news.error = null
+         })
+         .addCase(fetchStockNews.fulfilled, (state, action) => {
+            state.news.status = 'succeeded'
+            state.news.items = action.payload.news || []
+            state.news.lastUpdated = new Date().toISOString() // 뉴스 마지막 업데이트 시간 업데이트
+            state.news.error = null
+         })
+         .addCase(fetchStockNews.rejected, (state, action) => {
+            state.news.status = 'failed'
+            state.news.error = action.payload
+         })
    },
 })
 
@@ -243,5 +286,9 @@ export const selectConnectionStatus = (state) => state.stock?.isConnected ?? fal
 export const selectMarketOverview = (state) => state.stock?.marketOverview || null // 시장 개요 선택
 export const selectMarketOverviewStatus = (state) => state.stock?.status.marketOverview || 'idle' // 시장 개요 상태 선택
 export const selectMarketOverviewError = (state) => state.stock?.error.marketOverview || null // 시장 개요 오류 선택
+export const selectNews = (state) => state.stock.news.items // 뉴스 선택
+export const selectNewsStatus = (state) => state.stock.news.status // 뉴스 상태 선택
+export const selectNewsError = (state) => state.stock.news.error // 뉴스 오류 선택
+export const selectNewsLastUpdated = (state) => state.stock.news.lastUpdated // 뉴스 마지막 업데이트 선택
 
 export default stockSlice.reducer

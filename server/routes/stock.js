@@ -1,6 +1,21 @@
 const express = require('express')
 const router = express.Router()
 const yahooFinance = require('yahoo-finance2').default
+const fs = require('fs')
+const path = require('path')
+
+// stockMapping.json 파일 불러오기
+function loadStockMapping() {
+   const filePath = path.join(__dirname, '../config/stockMapping.json')
+   const rawData = fs.readFileSync(filePath, 'utf8')
+   return JSON.parse(rawData)
+}
+
+// 종목 이름을 한글로 변환
+function translateStockName(englishName) {
+   const stockMapping = loadStockMapping()
+   return stockMapping[englishName] || englishName
+}
 
 // 콘솔 로그에 yahoo-finance2 라이브러리 설문 조사 출력 제거
 yahooFinance.suppressNotices(['yahooSurvey'])
@@ -67,7 +82,7 @@ const isMarketOpen = (symbol) => {
 // 데이터 포맷팅
 const formatQuoteData = (quote, marketStatus = 'CLOSED') => ({
    symbol: quote.symbol, // 심볼
-   name: quote.shortName || quote.longName, // 이름
+   name: translateStockName(quote.shortName || quote.longName), // 이름
    price: quote.regularMarketPrice, // 가격
    change: quote.regularMarketChange, // 변동
    changePercent: quote.regularMarketChangePercent, // 변동률
@@ -153,7 +168,7 @@ router.get('/search', async (req, res) => {
 
       const results = await yahooFinance.search(query, {
          newsCount: 0,
-         quotesCount: 10,
+         quotesCount: 5,
          enableFuzzyQuery: true,
          enableNavLinks: false,
       })
@@ -211,12 +226,12 @@ router.get('/quote/:symbol', async (req, res) => {
       }
    }
 
-   // 하트비트 전송
+   // 하트비트 전송 : 하트비트란, 서버와 클라이언트 간의 연결을 유지하기 위해 주기적으로 보내는 데이터
    heartbeatId = setInterval(() => {
       if (!res.writableEnded) {
          res.write(':keepalive\n\n')
       }
-   }, 30000)
+   }, 60000)
 
    // 초기 데이터 전송
    await sendQuoteData()
@@ -379,6 +394,83 @@ router.get('/market-overview', async (req, res) => {
    } catch (error) {
       console.error('시장 개요 조회 오류:', error.message)
       return res.status(500).json({ error: '시장 개요 조회 중 오류가 발생했습니다.' })
+   }
+})
+
+// 뉴스 조회
+router.get('/news/:symbol', async (req, res) => {
+   try {
+      const { symbol } = req.params
+
+      // 뉴스 데이터 가져오기
+      const result = await yahooFinance.search(symbol, {
+         newsCount: 5, // 뉴스 개수 5개만 표시
+         quotesCount: 0, // 주식 개수는 여기서는 필요 없으니 0으로 설정
+      })
+
+      if (!result || !result.news || result.news.length === 0) {
+         return res.status(404).json({
+            error: '뉴스 데이터를 찾을 수 없습니다.',
+            symbol,
+         })
+      }
+
+      // 뉴스 데이터 가공
+      const formattedNews = result.news.map((news) => {
+         let publishedAt = null
+
+         // providerPublishTime 값 확인
+         if (news.providerPublishTime) {
+            let timestamp = news.providerPublishTime
+
+            // 값이 문자열인 경우 숫자로 변환
+            if (typeof timestamp === 'string') {
+               timestamp = parseInt(timestamp, 10)
+            }
+
+            // 값이 숫자이고 유효한지 확인
+            if (typeof timestamp === 'number' && !isNaN(timestamp)) {
+               // Unix 타임스탬프(초 단위)인지 확인
+               if (timestamp < 10000000000) {
+                  timestamp *= 1000 // 초 단위를 밀리초 단위로 변환
+               }
+
+               const date = new Date(timestamp)
+
+               // 날짜가 유효한지 확인
+               if (!isNaN(date.getTime()) && date.getFullYear() > 1970 && date.getFullYear() < 2100) {
+                  publishedAt = date.toISOString()
+               }
+            }
+         }
+
+         // publishedAt이 여전히 null인 경우, 현재 시간으로 설정
+         if (!publishedAt) {
+            publishedAt = new Date().toISOString()
+         }
+
+         return {
+            title: news.title, // 뉴스 제목
+            publisher: news.publisher, // 뉴스 제공자
+            link: news.link, // 뉴스 링크
+            publishedAt, // 뉴스 발행 시간
+            summary: news.summary, // 뉴스 요약
+         }
+      })
+
+      return res.json({
+         symbol, // 종목 심볼
+         count: formattedNews.length, // 뉴스 개수
+         news: formattedNews, // 뉴스 데이터
+      })
+   } catch (error) {
+      console.error('뉴스 조회 오류:', error)
+
+      return res.status(500).json({
+         error: '뉴스 조회 중 오류가 발생했습니다.',
+         details: error.message,
+         symbol: req.params.symbol,
+      })
    }
 })
 
