@@ -17,6 +17,7 @@ import NotFound from './pages/NotFound'
 import StockDetail from './pages/StockDetail'
 import UserDashboard from './pages/UserDashboard'
 import GlobalStyles from './styles/GlobalStyles'
+import LoginRoute from './components/redirect/LoginRoute'
 
 function App() {
    const dispatch = useDispatch()
@@ -33,8 +34,22 @@ function App() {
          <Routes>
             <Route path="/" element={<Home isAuthenticated={isAuthenticated} user={user} />} />
             <Route path="/stock/:symbol" element={<StockDetail />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+            <Route
+               path="/login"
+               element={
+                  <LoginRoute>
+                     <Login />
+                  </LoginRoute>
+               }
+            />
+            <Route
+               path="/signup"
+               element={
+                  <LoginRoute>
+                     <Signup />
+                  </LoginRoute>
+               }
+            />
             <Route path="/posts" element={<Posts />} />
             <Route path="/post/write" element={<WritePost />} />
             <Route path="/post/edit/:id" element={<EditPost />} />
