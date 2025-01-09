@@ -205,47 +205,6 @@ router.get('/:id', async (req, res) => {
    }
 })
 
-/* 
-// 게시글 작성
-router.post('/', isLoggedIn, upload.single('img'), async (req, res) => {
-   try {
-      const post = await Post.create({
-         title: req.body.title,
-         content: req.body.content,
-         img: req.file ? `/uploads/${req.file.filename}` : null,
-         UserId: req.user.id,
-      })
-
-      const newPost = await Post.findOne({
-         where: { id: post.id },
-         include: [
-            {
-               model: User,
-               attributes: ['id', 'username'],
-            },
-            {
-               model: Like,
-               attributes: ['UserId'],
-            },
-            {
-               model: Comment,
-               attributes: ['id'],
-            },
-         ],
-      })
-
-      res.status(201).json({
-         success: true,
-         post: newPost,
-         message: '게시글이 성공적으로 작성되었습니다.',
-      })
-   } catch (error) {
-      console.error('게시글 작성 오류:', error)
-      res.status(500).json({ error: '게시글 작성 중 오류가 발생했습니다.' })
-   }
-})
-*/
-
 // 게시글 수정
 router.put('/:id', isLoggedIn, upload.single('img'), async (req, res) => {
    try {
@@ -262,9 +221,13 @@ router.put('/:id', isLoggedIn, upload.single('img'), async (req, res) => {
       const updateData = {
          title: req.body.title,
          content: req.body.content,
-         img: req.file ? `/uploads/${req.file.filename}` : null,
-         UserId: req.user.id,
       }
+
+      // 새 이미지가 업로드된 경우에만 img 필드 업데이트
+      if (req.file) {
+         updateData.img = `/uploads/${req.file.filename}`
+      }
+      // 이미지가 없는 경우 기존 이미지 유지 (img 필드 업데이트하지 않음)
 
       await post.update(updateData)
 

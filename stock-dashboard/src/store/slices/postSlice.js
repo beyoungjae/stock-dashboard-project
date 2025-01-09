@@ -44,11 +44,10 @@ export const getPost = createAsyncThunk('post/getPost', async (postId, { rejectW
 })
 
 // 게시글 수정
-export const updatePost = createAsyncThunk('post/update', async (data, { rejectWithValue }) => {
+export const updatePost = createAsyncThunk('post/update', async ({ id, formData }, { rejectWithValue }) => {
    try {
-      const { id, ...postData } = data
-      const response = await postAPI.updatePost(id, postData)
-      return response
+      const response = await postAPI.updatePost(id, formData)
+      return response.post
    } catch (error) {
       return rejectWithValue(error.message)
    }

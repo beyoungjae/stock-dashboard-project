@@ -27,7 +27,12 @@ const PostForm = ({ initialData = null }) => {
             content: initialData.content,
             img: initialData.img,
          })
-         setPreviewImage(initialData.img)
+
+         if (initialData.img) {
+            // 서버 URL과 이미지 경로 결합
+            const fullImageURL = `${process.env.REACT_APP_API_URL}${initialData.img}`
+            setPreviewImage(fullImageURL)
+         }
       }
    }, [initialData])
 
@@ -94,25 +99,21 @@ const PostForm = ({ initialData = null }) => {
       setIsSubmitting(true)
       setError(null)
 
-      // 게시글 생성 또는 업데이트
       try {
          const postFormData = new FormData()
          postFormData.append('title', formData.title)
          postFormData.append('content', formData.content)
 
-         // 이미지 파일이 있는 경우, 파일 이름을 인코딩하여 FormData에 추가
-         if (formData.img) {
-            const encodedFile = new File([formData.img], encodeURIComponent(formData.img.name), {
-               type: formData.img.type,
-            })
-            postFormData.append('img', encodedFile)
+         // 새로운 이미지가 선택된 경우에만 이미지 추가
+         if (formData.img instanceof File) {
+            postFormData.append('img', formData.img)
          }
 
          if (initialData) {
             await dispatch(
                updatePost({
                   id: initialData.id,
-                  ...formData,
+                  formData: postFormData,
                })
             ).unwrap()
          } else {
