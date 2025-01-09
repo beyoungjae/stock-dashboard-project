@@ -138,7 +138,7 @@ const Home = () => {
    const handleStockClick = useCallback(
       (symbol) => {
          dispatch(getQuote(symbol))
-         navigate(`/stock/${symbol}`, { replace: true }) // replace 옵션을 사용하여 히스토리 스택을 대체
+         navigate(`/stock/${symbol}`)
       },
       [dispatch, navigate]
    )
