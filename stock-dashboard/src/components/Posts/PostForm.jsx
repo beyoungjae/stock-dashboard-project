@@ -140,7 +140,10 @@ const PostForm = ({ initialData = null }) => {
          </FormGroup>
 
          <FormGroup initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
-            <Label htmlFor="img">이미지</Label>
+            <Label htmlFor="img">
+               이미지
+               <SubLabel>이미지 확장자는 jpeg, png, gif 만 업로드 가능합니다.</SubLabel>
+            </Label>
             <ImageUploadContainer>
                <ImageUploadButton type="button" onClick={() => fileInputRef.current?.click()} disabled={isSubmitting} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   이미지 선택
@@ -193,6 +196,29 @@ const Label = styled.label`
    font-size: ${({ theme }) => theme.typography.fontSizes.md};
    color: ${({ theme }) => theme.colors.textSecondary};
    font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
+   position: relative;
+   display: inline-flex;
+   align-items: center;
+
+   &:hover span {
+      visibility: visible;
+      opacity: 1;
+   }
+`
+
+const SubLabel = styled.span`
+   visibility: hidden;
+   opacity: 0;
+   position: absolute;
+   left: 8%;
+   margin-left: ${({ theme }) => theme.spacing.sm};
+   background-color: rgba(0, 0, 0, 0.7);
+   color: white;
+   padding: 5px 10px;
+   border-radius: 4px;
+   font-size: ${({ theme }) => theme.typography.fontSizes.sm};
+   white-space: nowrap;
+   transition: visibility 0s, opacity 0.3s ease-in-out;
 `
 
 const Input = styled(motion.input)`
