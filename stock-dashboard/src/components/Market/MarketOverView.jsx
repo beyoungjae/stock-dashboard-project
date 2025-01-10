@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchMarketOverview, selectMarketOverview, selectMarketOverviewStatus, selectMarketOverviewError } from '../store/slices/stockSlice'
+import { fetchMarketOverview, selectMarketOverview, selectMarketOverviewStatus, selectMarketOverviewError } from '../../store/slices/stockSlice'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import styled from 'styled-components'
 import { motion, AnimatePresence } from 'framer-motion'

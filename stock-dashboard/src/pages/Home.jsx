@@ -4,8 +4,8 @@ import { clearSearchResults, getQuote } from '../store/slices/stockSlice'
 import styled from 'styled-components'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import SearchBar from '../components/SearchBar'
-import StockList from '../components/StockList'
+import SearchBar from '../components/shared/SearchBar'
+import StockList from '../components/Stocks/StockList'
 import { selectStatus, selectSearchResults } from '../store/slices/stockSlice'
 
 // 인기 주식, 코인 목록 데이터 예시로 표시

@@ -5,7 +5,7 @@ import styled from 'styled-components'
 import { motion, AnimatePresence } from 'framer-motion'
 import MenuIcon from '@mui/icons-material/Menu'
 import CloseIcon from '@mui/icons-material/Close'
-import { logoutUserThunk } from '../store/slices/authSlice'
+import { logoutUserThunk } from '../../store/slices/authSlice'
 
 const Navbar = ({ user }) => {
    const [isMenuOpen, setIsMenuOpen] = useState(false)

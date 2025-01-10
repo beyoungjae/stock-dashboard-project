@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
-import { createPost, updatePost } from '../store/slices/postSlice'
+import { createPost, updatePost } from '../../store/slices/postSlice'
 
 const PostForm = ({ initialData = null }) => {
    // 게시글 작성, 수정 폼

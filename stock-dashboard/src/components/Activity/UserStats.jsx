@@ -2,7 +2,7 @@ import React from 'react'
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
 import { useSelector, useDispatch } from 'react-redux'
-import { setActivityFilter } from '../store/slices/userSlice'
+import { setActivityFilter } from '../../store/slices/userSlice'
 
 const UserStats = () => {
    const dispatch = useDispatch()

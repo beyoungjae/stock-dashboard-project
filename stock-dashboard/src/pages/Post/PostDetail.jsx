@@ -5,8 +5,8 @@ import styled from 'styled-components'
 import { motion } from 'framer-motion'
 import { formatDistanceToNow } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { getPost, deletePost, likePost, unlikePost, selectCurrentPost, selectPostLoading, selectPostError } from '../store/slices/postSlice'
-import CommentList from '../components/CommentList'
+import { getPost, deletePost, likePost, unlikePost, selectCurrentPost, selectPostLoading, selectPostError } from '../../store/slices/postSlice'
+import CommentList from '../../components/Posts/CommentList'
 
 const PostDetail = () => {
    const { id } = useParams()

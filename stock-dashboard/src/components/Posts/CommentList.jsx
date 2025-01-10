@@ -4,8 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useSelector, useDispatch } from 'react-redux'
 import { formatDistanceToNow } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { getPost } from '../store/slices/postSlice'
-import * as commentAPI from '../api/comment' // slice에서 사용하지 않고, 직접 사용
+import { getPost } from '../../store/slices/postSlice'
+import * as commentAPI from '../../api/comment' // slice에서 사용하지 않고, 직접 사용
 
 // 날짜 형식 변환 : 댓글 작성 시 날짜 형식 변환
 const formatDate = (dateString) => {

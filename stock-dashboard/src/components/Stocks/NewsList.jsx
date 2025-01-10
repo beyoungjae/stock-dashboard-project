@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import styled from 'styled-components'
 import { motion, AnimatePresence } from 'framer-motion'
-import { fetchStockNews, selectNews, selectNewsStatus, selectNewsError } from '../store/slices/stockSlice'
+import { fetchStockNews, selectNews, selectNewsStatus, selectNewsError } from '../../store/slices/stockSlice'
 
 const NewsList = ({ symbol }) => {
    // 부모 컴포넌트에서 전달된 symbol 값을 사용하여 뉴스 데이터를 불러오기

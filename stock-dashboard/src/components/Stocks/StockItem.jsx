@@ -2,7 +2,7 @@ import React, { useCallback } from 'react'
 import styled from 'styled-components'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
-import { getQuote } from '../store/slices/stockSlice'
+import { getQuote } from '../../store/slices/stockSlice'
 import { motion } from 'framer-motion'
 
 const StockItem = ({ stock }) => {

@@ -4,9 +4,9 @@ import { useDispatch, useSelector } from 'react-redux'
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
 import FlipNumbers from 'react-flip-numbers'
-import { selectCurrentStock, selectStatus, selectErrors, getQuote, subscribeToQuote, setConnectionStatus, fetchStockNews } from '../store/slices/stockSlice'
-import StockChart from '../components/StockChart'
-import NewsList from '../components/NewsList'
+import { selectCurrentStock, selectStatus, selectErrors, getQuote, subscribeToQuote, setConnectionStatus, fetchStockNews } from '../../store/slices/stockSlice'
+import StockChart from '../../components/Stocks/StockChart'
+import NewsList from '../../components/Stocks/NewsList'
 import RefreshIcon from '@mui/icons-material/Refresh'
 
 const StockDetail = () => {

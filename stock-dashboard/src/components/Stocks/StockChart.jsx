@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { XAxis, YAxis, CartesianGrid, Tooltip, Area, ResponsiveContainer, ComposedChart } from 'recharts'
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
-import { stockAPI } from '../api/stock'
+import { stockAPI } from '../../api/stock'
 
 const StockChart = ({ symbol }) => {
    // 부모 컴포넌트에서 전달된 symbol 값을 사용하여 주식 차트 데이터를 불러오기

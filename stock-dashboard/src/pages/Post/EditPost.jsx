@@ -3,8 +3,8 @@ import { useParams, Navigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
-import { getPost, selectCurrentPost, selectPostLoading, selectPostError } from '../store/slices/postSlice'
-import PostForm from '../components/PostForm'
+import { getPost, selectCurrentPost, selectPostLoading, selectPostError } from '../../store/slices/postSlice'
+import PostForm from '../../components/Posts/PostForm'
 
 const EditPost = () => {
    const { id } = useParams()

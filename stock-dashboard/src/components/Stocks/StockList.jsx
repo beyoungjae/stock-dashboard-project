@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux'
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
 import StockItem from './StockItem'
-import { selectSearchResults, selectStatus, selectErrors } from '../store/slices/stockSlice'
+import { selectSearchResults, selectStatus, selectErrors } from '../../store/slices/stockSlice'
 
 const StockList = () => {
    const searchResults = useSelector(selectSearchResults)

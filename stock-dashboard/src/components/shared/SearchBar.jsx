@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react'
 import { useDispatch } from 'react-redux'
 import styled from 'styled-components'
-import { searchStocks } from '../store/slices/stockSlice'
+import { searchStocks } from '../../store/slices/stockSlice'
 import SearchIcon from '@mui/icons-material/Search'
 
 const SearchBar = () => {

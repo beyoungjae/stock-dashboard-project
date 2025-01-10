@@ -1,44 +1,45 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
-import { useParams } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { getUserActivityThunk } from '../store/slices/userSlice'
-import ActivityList from '../components/ActivityList'
-import UserStats from '../components/UserStats'
+import ActivityList from '../../components/Activity/ActivityList'
+import UserStats from '../../components/Activity/UserStats'
+import { getUserActivityThunk } from '../../store/slices/userSlice'
 
-const UserDashboard = () => {
-   const { userId } = useParams() // 사용자 ID useParams로 가져오기
+const MyDashboard = () => {
    const dispatch = useDispatch()
-   const { activity, loading, error } = useSelector((state) => state.user)
+   const { user } = useSelector((state) => state.auth)
+   const { loading, error } = useSelector((state) => state.user)
 
    useEffect(() => {
-      if (userId) {
-         dispatch(getUserActivityThunk(userId)) // 사용자 활동 조회
+      if (user?.id) {
+         dispatch(getUserActivityThunk(user.id))
       }
-   }, [dispatch, userId])
+   }, [dispatch, user?.id])
 
-   if (loading) return <div>로딩중...</div>
-   if (error) return <div>에러: {error}</div>
+   if (!user) return <div>로그인이 필요합니다.</div>
+   if (loading) return <div>Loading...</div>
+   if (error) return <div>Error: {error}</div>
 
    return (
       <DashboardContainer>
-         <Header initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <Title>{`${activity?.User?.username}님의 대시보드`}</Title>
-            <Description>사용자의 활동 내역을 확인하실 수 있습니다.</Description>
+         <Header initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} style={{ marginBottom: '1.5rem' }}>
+            <Title>나의 대시보드</Title>
+            <Description>안녕하세요, {user.username}님!</Description>
          </Header>
 
          <Content>
             <Section>
                <SectionHeader>
                   <SectionTitle>활동 통계</SectionTitle>
+                  <SectionDescription>지금까지의 활동 내역을 확인해보세요.</SectionDescription>
                </SectionHeader>
                <UserStats />
             </Section>
-
             <Section>
                <SectionHeader>
                   <SectionTitle>최근 활동</SectionTitle>
+                  <SectionDescription>최근 작성한 게시글, 댓글, 좋아요 내역입니다.</SectionDescription>
                </SectionHeader>
                <ActivityList />
             </Section>
@@ -97,4 +98,10 @@ const SectionTitle = styled.h2`
    margin: 0 0 ${({ theme }) => theme.spacing.xs};
 `
 
-export default UserDashboard
+const SectionDescription = styled.p`
+   font-size: ${({ theme }) => theme.typography.fontSizes.md};
+   color: ${({ theme }) => theme.colors.textSecondary};
+   margin: 0;
+`
+
+export default MyDashboard

@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux'
 import { Navigate } from 'react-router-dom'
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
-import PostForm from '../components/PostForm'
+import PostForm from '../../components/Posts/PostForm'
 
 const WritePost = () => {
    const { user } = useSelector((state) => state.auth)

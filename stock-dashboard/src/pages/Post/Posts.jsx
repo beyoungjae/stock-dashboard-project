@@ -3,8 +3,8 @@ import { useDispatch, useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
-import PostList from '../components/PostList'
-import { getPosts, selectAllPosts, selectPostLoading, selectPostError } from '../store/slices/postSlice'
+import PostList from '../../components/Posts/PostList'
+import { getPosts, selectAllPosts, selectPostLoading, selectPostError } from '../../store/slices/postSlice'
 
 const Posts = () => {
    const dispatch = useDispatch()
